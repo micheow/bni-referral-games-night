@@ -201,6 +201,10 @@ input:focus{outline:2px solid var(--gold)}
 .champbox .lbl{letter-spacing:4px;color:var(--gold);font-size:15px}
 .champbox .nm{font-size:clamp(34px,4.5vw,64px);font-weight:800;margin-top:6px;font-family:'Cinzel',Georgia,serif;
  background:linear-gradient(180deg,#fff3cf,var(--gold) 55%,var(--goldD));-webkit-background-clip:text;background-clip:text;color:transparent}
+#seedNote{text-align:center;color:var(--mut);font-size:13.5px;margin:0 auto 20px;max-width:1150px;line-height:1.7}
+#seedNote b{color:var(--gold)}
+#seedNote .sd{color:var(--bad1)}
+.playtag.sd{background:linear-gradient(180deg,#ff8c9d,#e8344a);color:#fff}
 .toolbar{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px}
 /* ---------- winner overlay ---------- */
 #overlay{position:fixed;inset:0;background:rgba(1,4,12,.93);z-index:500;display:flex;
@@ -288,6 +292,7 @@ input:focus{outline:2px solid var(--gold)}
  <h1 class="logo">Tournament Bracket</h1>
  <p class="sub">Highest-scoring Round 1 winner advances straight to the Final &middot; Round 1 uses opponents&rsquo; questions</p>
  <div id="champBox"></div>
+ <div id="seedNote"></div>
  <div class="bracketwrap">
   <div class="round"><div class="roundtitle">Round 1</div>
    <div id="m0"></div><div id="m1"></div><div id="m2"></div></div>
@@ -561,7 +566,7 @@ function matchHTML(m,idx){
  return '<div class="'+cls+'" onclick="clickMatch('+idx+')"><div class="mname">'+m.name+'</div>'+
   rw(m.a,m.sa,m.done&&m.winner===m.a)+rw(m.b,m.sb,m.done&&m.winner===m.b)+
   (ready&&!m.done?'<div class="playtag">PLAY ▶</div>':'')+
-  (m.done?'<div class="playtag done">DONE ✓</div>':'')+'</div>';
+  (m.done?(m.regA!=null?'<div class="playtag sd">⚔ SUDDEN DEATH</div>':'<div class="playtag done">DONE ✓</div>'):'')+'</div>';
 }
 function drawFlow(){
  if(!state||$('bracket').classList.contains('hidden'))return;
@@ -613,6 +618,17 @@ function renderBracket(){
   $('m'+i).innerHTML=matchHTML(m,i);});
  const fi=state.matches[4],cb=$('champBox');
  cb.innerHTML=fi.done?'<div class="champbox"><div class="lbl">🏆 CHAMPION 🏆</div><div class="nm">'+esc(state.teams[fi.winner])+'</div></div>':'';
+ const sf=[state.matches[0],state.matches[1],state.matches[2]],sn=$('seedNote');
+ if(sf.every(x=>x.done)&&state.byeTeam!=null){
+  const rows=sf.map(x=>{const sd=x.regA!=null;
+   return {name:state.teams[x.winner],sd,score:sd?x.regA:Math.max(x.sa,x.sb),
+    margin:sd?0:Math.abs(x.sa-x.sb),bye:x.winner===state.byeTeam};})
+   .sort((x,y)=>y.score-x.score||y.margin-x.margin);
+  sn.innerHTML='<b>Seeding — regulation results only (sudden-death points don\u2019t count):</b><br>'+
+   rows.map((r,i)=>(i+1)+'. '+esc(r.name)+(r.bye?' 👑':'')+' — '+
+    (r.sd?'<span class="sd">drew '+r.score+'–'+r.score+', advanced on sudden death</span>'
+     :r.score+' pts, won by '+r.margin)).join(' &nbsp;·&nbsp; ');
+ }else sn.innerHTML='';
  $('poolBtn').textContent='🗂 '+state.queue.length+' questions left in pool';
  save();
  requestAnimationFrame(drawFlow);
