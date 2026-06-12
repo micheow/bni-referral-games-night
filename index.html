@@ -157,6 +157,8 @@ input:focus{outline:2px solid var(--gold)}
 .filebox{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 #qStatus{margin-top:10px;font-size:15px;color:var(--ok1);min-height:22px}
 #qStatus.warn{color:var(--lock1)}
+#qWarn{color:var(--lock1);font-size:13px;margin-top:6px;max-height:150px;overflow:auto;line-height:1.65}
+#qWarn b{color:var(--bad1)}
 .note{color:var(--mut);font-size:13px;margin-top:8px;line-height:1.55}
 .inline{display:flex;gap:26px;flex-wrap:wrap;align-items:center}
 .inline label{display:flex;gap:10px;align-items:center;font-size:15px;color:var(--txt)}
@@ -284,6 +286,7 @@ input:focus{outline:2px solid var(--gold)}
    <button class="btn ghost" id="loadSample">Use built-in sample questions</button>
   </div>
   <div id="qStatus"></div>
+  <div id="qWarn"></div>
   <p class="note">File needs columns: <b>Question, A, B, C, D, Correct</b> (Correct = letter A&ndash;D),
    plus optional <b>Owner</b> (submitting team&rsquo;s name, must match above) and <b>Type</b> columns.
    Set Type to <b>Open</b> for the Final&rsquo;s open-ended round (2 per team, host scores 0&ndash;5; put a suggested answer in column A).
@@ -500,7 +503,8 @@ function handleFile(file){
  const fin=qs=>{loadedQs=qs;
   const op=qs.filter(q=>q.type==='open').length,mc=qs.length-op;
   st.textContent='✅ '+mc+' multiple-choice + '+op+' open-ended loaded'+(mc<100?'. A full 10-per-team tournament needs ~100+ MCQs':'');
-  if(mc<100)st.className='warn';};
+  if(mc<100)st.className='warn';
+  flagLongText(qs);};
  const fail=e=>{st.className='warn';st.textContent='❌ '+e.message;loadedQs=null;};
  if(/\.csv$/i.test(file.name)){
   const rd=new FileReader();
@@ -519,6 +523,18 @@ function handleFile(file){
    s.onload=go;s.onerror=()=>fail(new Error('Could not load Excel reader. Save as CSV instead'));
    document.head.appendChild(s);}
  }
+}
+function flagLongText(qs){
+ const w=$('qWarn');if(!w)return;
+ const wc=t=>(t||'').trim()?t.trim().split(/\s+/).length:0;
+ const longs=[];
+ qs.forEach((q,i)=>{
+  const n=wc(q.q);
+  if(n>25)longs.push('#'+(i+1)+' question is '+n+' words: \u201c'+esc(q.q.slice(0,70))+'\u2026\u201d');
+  (q.a||[]).forEach((a,j)=>{const m=wc(a);
+   if(m>25)longs.push('#'+(i+1)+' answer '+'ABCD'[j]+' is '+m+' words: \u201c'+esc(a.slice(0,70))+'\u2026\u201d');});
+ });
+ w.innerHTML=longs.length?'<b>⚠ '+longs.length+' item'+(longs.length===1?'':'s')+' over 25 words</b> (text will auto-shrink on screen; consider trimming):<br>'+longs.join('<br>'):'';
 }
 const SAMPLE=[
 ['What does BNI stand for?','Business Network International','Best Networking Inc','Business Niche Initiative','Branded Network Industries',0],
@@ -582,6 +598,7 @@ function initSetup(){
    if(!t||loadedQs)return;
    try{loadedQs=rowsToQuestions(parseCSV(t));
     $('qStatus').textContent='✅ '+loadedQs.length+' questions auto-loaded from questions.csv on this site';
+    flagLongText(loadedQs);
    }catch(e){}
   }).catch(()=>{});
  }
