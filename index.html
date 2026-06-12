@@ -62,7 +62,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--txt);
  line-height:1.25;overflow:hidden;transition:filter .2s}
 .ans:hover:not(.dead) .hi{background:linear-gradient(180deg,#1c4aa8 0%,#123270 48%,#081d4a 52%,#0d2a60 100%)}
 .ans:hover:not(.dead){transform:scale(1.015)}
-.ans .ltr{color:var(--gold);font-weight:900;font-size:1.05em;min-width:34px;font-family:Georgia,serif}
+.ans .ltr{color:var(--gold);font-weight:900;font-size:clamp(18px,1.9vw,29px);min-width:34px;font-family:Georgia,serif}
 .ans.dead{pointer-events:none}
 .ans.dim{filter:brightness(.34) saturate(.5);transition:filter .5s}
 .ans.locked .hi{background:linear-gradient(180deg,var(--lock1) 0%,#f08c00 48%,#9c4d00 52%,var(--lock2) 100%);color:#2a1400}
@@ -372,11 +372,12 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 function $(id){return document.getElementById(id);}
 function show(id){['setup','bracket','game'].forEach(s=>$(s).classList.toggle('hidden',s!==id));}
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-function fitText(el,min){
- el.style.fontSize='';
- let f=parseFloat(getComputedStyle(el).fontSize)||20,guard=60;
- el.style.fontSize=f+'px';
- while(guard-->0&&f>min&&el.scrollHeight-el.clientHeight>2){f-=1;el.style.fontSize=f+'px';}
+function fitText(el,min,target){
+ const t=target||el;
+ t.style.fontSize='';
+ let f=parseFloat(getComputedStyle(t).fontSize)||20,guard=60;
+ t.style.fontSize=f+'px';
+ while(guard-->0&&f>min&&el.scrollHeight-el.clientHeight>2){f-=1;t.style.fontSize=f+'px';}
 }
 /* ================= AUDIO ENGINE ================= */
 let AC=null;
@@ -784,7 +785,7 @@ function nextQuestion(){
  $('nextBtn').classList.add('hidden');$('skipBtn').classList.remove('hidden');
  $('undoBtn').classList.add('hidden');play.last=null;
  fitText($('qText'),15);
- document.querySelectorAll('.ans .hi').forEach(el=>fitText(el,12));
+ document.querySelectorAll('.ans .hi').forEach(el=>fitText(el,12,el.querySelector('span:last-child')));
  updatePanels();startTimer();save();
 }
 /* --- two-stage WWTBAM reveal: lock in → suspense → reveal --- */
