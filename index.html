@@ -223,8 +223,29 @@ input:focus{outline:2px solid var(--gold)}
  filter:drop-shadow(0 6px 30px rgba(255,84,104,.55));animation:shine 1.6s linear infinite,deathshake 2.8s ease-in-out infinite}
 @keyframes deathshake{0%,88%,100%{transform:none}90%{transform:translateX(-5px)}93%{transform:translateX(5px)}96%{transform:translateX(-3px)}}
 #overlay .orays.red{background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(255,84,104,.10) 0 6deg,transparent 6deg 20deg)}
-@media(max-width:780px){.answers{grid-template-columns:1fr}.teamgrid{grid-template-columns:1fr}
- .topbar{grid-template-columns:1fr;gap:12px}}
+@media(max-width:900px){
+ #flowSvg{display:none}
+ .screen{padding:18px 14px 30px}
+ .answers{grid-template-columns:1fr;gap:12px}
+ .teamgrid{grid-template-columns:1fr}
+ .topbar{grid-template-columns:1fr 1fr;gap:10px}
+ .mid{grid-column:1/-1;order:-1}
+ .bracketwrap{gap:26px}
+ .round{min-width:100%}
+ .match{min-width:0}
+ .kbd{display:none}
+ .gctrl{gap:10px}
+ .tp{padding:10px 14px}
+ #qWrap{margin:18px auto 14px}
+ #qWrap .hi{padding:16px 30px;font-size:19px;min-height:88px}
+ .ans .hi{padding:12px 22px;font-size:16px;min-height:54px;gap:10px}
+ .hex .hx{clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,14px 100%,0 50%)}
+ .hex .hi{clip-path:polygon(13px 0,calc(100% - 13px) 0,100% 50%,calc(100% - 13px) 100%,13px 100%,0 50%)}
+ .obox{padding:24px 18px}
+ .champbox{padding:18px 20px}
+ .card{padding:18px 18px}
+ .big{width:100%}
+}
 </style>
 </head>
 <body>
@@ -518,6 +539,7 @@ function matchHTML(m,idx){
 }
 function drawFlow(){
  if(!state||$('bracket').classList.contains('hidden'))return;
+ if(innerWidth<=900){const sv=$('flowSvg');if(sv)sv.innerHTML='';return;}
  const wrap=document.querySelector('.bracketwrap');
  let svg=$('flowSvg');
  if(!svg){svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
