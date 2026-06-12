@@ -455,6 +455,11 @@ let dmAudio=null,dmReady=false;
 });
 document.addEventListener('touchend',unlockAudio,{passive:true});
 document.addEventListener('click',unlockAudio);
+/* Switching apps/tabs suspends the AudioContext; resume it on return so sound keeps working */
+function resumeAudio(){try{if(AC&&AC.state!=='running')AC.resume().catch(()=>{});}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)resumeAudio();});
+addEventListener('focus',resumeAudio);
+addEventListener('pageshow',resumeAudio);
 document.addEventListener('click',e=>{
  const b=e.target.closest('button,.match');
  if(!b)return;
