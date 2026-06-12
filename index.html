@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BNI Referral Games Night</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+ --gold:#f5c542;--gold2:#ffdf8e;--goldD:#b8860b;
+ --silver:#a9c2ef;--silver2:#5f7fc0;
+ --navy:#0a1f4d;--navyD:#04102b;--ink:#02050f;
+ --lock1:#ffb84d;--lock2:#e07b00;--ok1:#2fe57e;--ok2:#0a9648;--bad1:#ff5468;--bad2:#b3122c;
+ --txt:#f6f8ff;--mut:#8fa3d4}
+html,body{height:100%}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--txt);overflow-x:hidden;
+ background:radial-gradient(ellipse 120% 85% at 50% 22%,#14387e 0%,#081a44 42%,#030a1f 78%,#01040c 100%);
+ background-attachment:fixed;min-height:100vh}
+#rays{position:fixed;inset:-60%;pointer-events:none;z-index:0;opacity:.8;
+ background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(96,150,255,.055) 0 5deg,transparent 5deg 17deg);
+ animation:spin 90s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#vign{position:fixed;inset:0;pointer-events:none;z-index:1;
+ background:radial-gradient(ellipse 95% 90% at 50% 45%,transparent 55%,rgba(0,0,0,.55) 100%)}
+#confettiCv{position:fixed;inset:0;pointer-events:none;z-index:999}
+.screen{position:relative;z-index:2;max-width:1560px;margin:0 auto;padding:26px 44px 40px;
+ min-height:100vh;display:flex;flex-direction:column}
+.hidden{display:none!important}
+/* ---------- typography ---------- */
+.logo{text-align:center;font-family:'Cinzel',Georgia,'Times New Roman',serif;font-weight:700;
+ font-size:clamp(26px,3.4vw,52px);letter-spacing:1px;
+ background:linear-gradient(180deg,#fff3cf 8%,var(--gold) 38%,var(--goldD) 62%,#ffe9a8 88%);
+ -webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(0 3px 10px rgba(245,197,66,.35))}
+.sub{text-align:center;color:var(--mut);margin:8px 0 26px;font-size:clamp(12px,1.1vw,17px);letter-spacing:3px;text-transform:uppercase}
+/* ---------- hexagon lozenge ---------- */
+.hex{position:relative;z-index:2}
+.hex .hx{clip-path:polygon(30px 0,calc(100% - 30px) 0,100% 50%,calc(100% - 30px) 100%,30px 100%,0 50%);
+ background:linear-gradient(180deg,#b6c9ef 0%,#7f9bd6 30%,#46639f 50%,#2c4480 52%,#7f9bd6 80%,#a7bce6 100%);
+ padding:2.6px}
+.hex .hi{clip-path:polygon(28px 0,calc(100% - 28px) 0,100% 50%,calc(100% - 28px) 100%,28px 100%,0 50%);
+ background:linear-gradient(180deg,#11306e 0%,#0a2050 48%,#04102b 52%,#071a40 100%);
+ width:100%;height:100%;display:flex;align-items:center;gap:16px}
+
+/* ---------- question & answers ---------- */
+#qWrap{margin:30px auto 26px;width:min(1240px,96%)}
+#qWrap .hi{position:relative;overflow:hidden}
+#qWrap.sweep .hi::after{content:'';position:absolute;top:0;left:-45%;width:36%;height:100%;
+ background:linear-gradient(100deg,transparent,rgba(255,255,255,.15),transparent);
+ animation:sweep 1.15s ease .2s forwards}
+@keyframes sweep{to{transform:translateX(480%)}}
+#qWrap .hi{justify-content:center;text-align:center;min-height:128px;
+ padding:clamp(20px,2.4vw,40px) 56px;font-size:clamp(22px,2.45vw,40px);font-weight:700;line-height:1.32}
+.answers{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:20px 34px;width:min(1240px,96%);margin:0 auto}
+.ans{cursor:pointer;transition:transform .15s;display:flex}
+.ans .hx{width:100%;display:flex}
+.ans .hi{padding:clamp(14px,1.6vw,24px) 34px;font-size:clamp(17px,1.8vw,28px);font-weight:600;min-height:74px;
+ transition:filter .2s}
+.ans:hover:not(.dead) .hi{background:linear-gradient(180deg,#1c4aa8 0%,#123270 48%,#081d4a 52%,#0d2a60 100%)}
+.ans:hover:not(.dead){transform:scale(1.015)}
+.ans .ltr{color:var(--gold);font-weight:900;font-size:1.05em;min-width:34px;font-family:Georgia,serif}
+.ans.dead{pointer-events:none}
+.ans.dim{filter:brightness(.34) saturate(.5);transition:filter .5s}
+.ans.locked .hi{background:linear-gradient(180deg,var(--lock1) 0%,#f08c00 48%,#9c4d00 52%,var(--lock2) 100%);color:#2a1400}
+.ans.locked .ltr{color:#fff}
+.ans.locked{animation:lockpulse 1s ease-in-out infinite}
+@keyframes lockpulse{0%,100%{filter:drop-shadow(0 0 6px rgba(255,159,28,.7))}50%{filter:drop-shadow(0 0 26px rgba(255,159,28,1))}}
+.ans.right{animation:none}
+.ans.right .hi{animation:flashG 1.5s steps(1) forwards;color:#fff}
+@keyframes flashG{0%,28%,56%{background:linear-gradient(180deg,var(--ok1),#15b85e 48%,#076b33 52%,var(--ok2))}
+ 14%,42%{background:linear-gradient(180deg,var(--lock1),#f08c00 48%,#9c4d00 52%,var(--lock2))}
+ 70%,100%{background:linear-gradient(180deg,var(--ok1),#15b85e 48%,#076b33 52%,var(--ok2))}}
+.ans.right{filter:drop-shadow(0 0 30px rgba(47,229,126,.8))}
+.ans.wrong .hi{background:linear-gradient(180deg,var(--bad1),#d62a44 48%,#7a0c1f 52%,var(--bad2));color:#fff}
+.ans.wrong{animation:shake .45s ease;filter:drop-shadow(0 0 22px rgba(255,84,104,.7))}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+/* ---------- top bar / team panels ---------- */
+.topbar{display:grid;grid-template-columns:1fr auto 1fr;gap:26px;align-items:center;margin-top:6px}
+#pA{--acc:#f5c542;--accGlow:rgba(245,197,66,.5);transform:skewX(-7deg)}
+#pB{--acc:#4dd7ff;--accGlow:rgba(77,215,255,.5);transform:skewX(7deg)}
+.tp{transition:all .3s;opacity:.55;position:relative;text-align:center;
+ background:linear-gradient(180deg,rgba(18,44,100,.92),rgba(5,15,40,.96));
+ border:1.6px solid rgba(169,194,239,.25);border-radius:8px;padding:14px 30px 12px;overflow:hidden}
+.tp::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;
+ background:linear-gradient(90deg,transparent,var(--acc),transparent)}
+.tp>*{transform:skewX(7deg)}
+#pB>*{transform:skewX(-7deg)}
+.tp .tname{font-size:clamp(15px,1.5vw,24px);font-weight:800;letter-spacing:.5px}
+.tp .tscore{font-size:clamp(30px,3.4vw,54px);font-weight:800;line-height:1.05;font-family:'Cinzel',Georgia,serif;
+ color:var(--acc);text-shadow:0 0 22px var(--accGlow)}
+.tp .tscore.pop{animation:spop .55s ease}
+@keyframes spop{35%{transform:skewX(7deg) scale(1.5)}}
+#pB .tscore.pop{animation:spopB .55s ease}
+@keyframes spopB{35%{transform:skewX(-7deg) scale(1.5)}}
+#pA.active{opacity:1;border-color:var(--acc);box-shadow:0 0 32px var(--accGlow);transform:skewX(-7deg) scale(1.05)}
+#pB.active{opacity:1;border-color:var(--acc);box-shadow:0 0 32px var(--accGlow);transform:skewX(7deg) scale(1.05)}
+#qNum{color:var(--mut);font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:8px}
+.dots{display:flex;gap:7px;justify-content:center;margin-top:3px}
+.dot{width:11px;height:11px;border-radius:50%;border:1.6px solid var(--silver);opacity:.5}
+.dot.ok{background:var(--ok1);border-color:var(--ok1);opacity:1;box-shadow:0 0 8px rgba(47,229,126,.8)}
+.dot.bad{background:var(--bad1);border-color:var(--bad1);opacity:1}
+/* ---------- clock ---------- */
+.mid{text-align:center}
+#matchLabel{color:var(--mut);font-size:13px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px}
+#clock{--p:100;width:clamp(86px,7.5vw,120px);height:clamp(86px,7.5vw,120px);border-radius:50%;margin:0 auto;
+ background:conic-gradient(var(--gold) calc(var(--p)*1%),rgba(255,255,255,.07) 0);
+ display:grid;place-items:center;filter:drop-shadow(0 0 14px rgba(245,197,66,.3));transition:filter .3s}
+#clock .cin{width:84%;height:84%;border-radius:50%;background:radial-gradient(circle at 38% 32%,#16356f,#040d24 75%);
+ display:grid;place-items:center;font-size:clamp(28px,3vw,46px);font-weight:800;font-family:'Cinzel',Georgia,serif}
+#clock.low{background:conic-gradient(var(--bad1) calc(var(--p)*1%),rgba(255,255,255,.07) 0);
+ filter:drop-shadow(0 0 18px rgba(255,84,104,.8));animation:lowpulse .5s infinite alternate}
+@keyframes lowpulse{from{transform:scale(1)}to{transform:scale(1.07)}}
+#turnBanner{text-align:center;margin:20px 0 4px;font-size:clamp(16px,1.8vw,28px);letter-spacing:.5px;min-height:1.5em}
+#turnBanner b{color:var(--gold)}
+@keyframes slidein{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+/* ---------- buttons / cards / forms ---------- */
+button{cursor:pointer;border:none;font-family:inherit;font-weight:700;
+ transition:transform .16s,box-shadow .25s,border-color .25s,color .25s}
+button:hover{transform:translateY(-2px)}
+button:active{transform:translateY(1px) scale(.98)}
+.btn{position:relative;overflow:hidden;background:linear-gradient(180deg,#234f9e,#122c63);
+ color:var(--txt);border:1px solid rgba(169,194,239,.42);border-radius:999px;
+ padding:13px 30px;font-size:14px;letter-spacing:1.4px;text-transform:uppercase;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 6px 18px rgba(0,0,0,.45)}
+.btn::after{content:'';position:absolute;top:0;left:-90%;width:45%;height:100%;
+ transform:skewX(-22deg);pointer-events:none;
+ background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);transition:left .5s ease}
+.btn:hover::after{left:130%}
+.btn:hover{border-color:var(--silver);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 10px 28px rgba(40,90,190,.55)}
+.btn.gold{background:linear-gradient(180deg,#ffe9a8 0%,#f5c542 48%,#e09b12 100%);color:#231500;
+ border:1px solid #ffedb6;text-shadow:0 1px 0 rgba(255,255,255,.35);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 8px 26px rgba(245,197,66,.42);
+ animation:goldbreathe 2.4s ease-in-out infinite}
+@keyframes goldbreathe{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 8px 24px rgba(245,197,66,.35)}
+ 50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 10px 34px rgba(245,197,66,.65)}}
+.btn.gold::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent)}
+.btn.ghost{background:rgba(10,24,58,.5);border:1px solid rgba(169,194,239,.32);color:var(--mut);
+ backdrop-filter:blur(6px);box-shadow:none}
+.btn.ghost:hover{color:var(--txt);border-color:var(--silver);box-shadow:0 8px 22px rgba(0,0,0,.4)}
+.btn.danger{background:linear-gradient(180deg,#7a1f3d,#480d21);border:1px solid #b3486a;color:#ffd9e2;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 6px 18px rgba(0,0,0,.45)}
+.big{font-size:clamp(17px,1.5vw,22px);padding:16px 44px;display:block;margin:24px auto 0;border-radius:14px}
+.gctrl{display:flex;gap:16px;justify-content:center;margin-top:26px;flex-wrap:wrap}
+.kbd{color:var(--mut);font-size:12px;text-align:center;margin-top:14px;letter-spacing:.4px}
+.kbd span{background:#0c1c40;border:1px solid #2c4480;border-radius:5px;padding:2px 7px;margin:0 2px}
+.card{background:rgba(8,22,54,.78);border:1px solid rgba(169,194,239,.18);
+ border-radius:18px;padding:24px 30px;margin:0 auto 18px;width:100%;max-width:880px;
+ box-shadow:0 16px 44px rgba(0,0,0,.5)}
+.card h2{font-size:18px;color:var(--gold);margin-bottom:14px;letter-spacing:1px}
+.teamgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+input[type=text],input[type=number]{background:#081637;border:1px solid #2c4480;color:var(--txt);
+ border-radius:10px;padding:11px 14px;font-size:16px;width:100%}
+input[type=number]{width:92px}
+input:focus{outline:2px solid var(--gold)}
+.filebox{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#qStatus{margin-top:10px;font-size:15px;color:var(--ok1);min-height:22px}
+#qStatus.warn{color:var(--lock1)}
+.note{color:var(--mut);font-size:13px;margin-top:8px;line-height:1.55}
+.inline{display:flex;gap:26px;flex-wrap:wrap;align-items:center}
+.inline label{display:flex;gap:10px;align-items:center;font-size:15px;color:var(--txt)}
+/* ---------- bracket ---------- */
+.bracketwrap{display:flex;gap:90px;justify-content:center;align-items:stretch;flex-wrap:wrap;margin-top:8px;position:relative}
+#flowSvg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:visible}
+.fl{fill:none;stroke:rgba(169,194,239,.32);stroke-width:2.5;stroke-dasharray:7 8;stroke-linecap:round}
+.fl.solid{stroke:rgba(169,194,239,.85);stroke-dasharray:none}
+.fl.gold{stroke:var(--gold);stroke-width:3.5;stroke-dasharray:none;filter:drop-shadow(0 0 7px rgba(245,197,66,.7))}
+.fl.goldfaint{stroke:rgba(245,197,66,.4);stroke-width:2.5;stroke-dasharray:4 9}
+.flowlbl{fill:var(--gold);font-size:11px;letter-spacing:2px;font-weight:700}
+.round{display:flex;flex-direction:column;gap:22px;justify-content:center;min-width:320px;position:relative;z-index:1}
+.roundtitle{display:flex;align-items:center;gap:14px;color:var(--gold);font-size:14px;letter-spacing:4px;
+ text-transform:uppercase;font-family:'Cinzel',Georgia,serif;font-weight:600}
+.roundtitle::before,.roundtitle::after{content:'';flex:1;height:1.5px;
+ background:linear-gradient(90deg,transparent,rgba(169,194,239,.45),transparent)}
+.match{background:linear-gradient(150deg,rgba(16,38,88,.95),rgba(5,14,38,.97));
+ border:1.6px solid rgba(169,194,239,.22);border-radius:14px;overflow:hidden;
+ padding:14px 18px;cursor:pointer;position:relative;min-width:320px;transition:all .22s}
+.match::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
+ background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.55}
+.match:hover{border-color:var(--gold);box-shadow:0 10px 30px rgba(245,197,66,.22);transform:translateY(-3px)}
+.match.done{border-color:rgba(47,229,126,.5)}
+.match.done::before{background:linear-gradient(90deg,transparent,var(--ok1),transparent)}
+.match.locked{opacity:.45;cursor:not-allowed;border-style:dashed}
+.match.locked::before{display:none}
+.mrow .tm{display:flex;align-items:center;gap:11px}
+.av{display:inline-flex;width:30px;height:30px;border-radius:50%;flex-shrink:0;
+ background:linear-gradient(135deg,#2c4480,#0d2a60);border:1.5px solid var(--silver2);
+ align-items:center;justify-content:center;font-weight:800;font-size:14px;color:var(--silver)}
+.mrow.winner .av{border-color:var(--gold);color:var(--gold);background:linear-gradient(135deg,#3d3110,#1d1604)}
+.match .mname{font-size:12px;color:var(--mut);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:9px;font-size:18px}
+.mrow .sc{font-weight:800;font-size:20px;min-width:34px;text-align:right;font-family:'Cinzel',Georgia,serif;color:var(--gold)}
+.mrow.winner{background:rgba(47,229,126,.12);color:var(--ok1)}
+.playtag{position:absolute;top:12px;right:14px;font-size:11.5px;background:linear-gradient(180deg,#ffe9a8,var(--gold));
+ color:#2a1c00;padding:3px 11px;border-radius:99px;font-weight:800;letter-spacing:1px}
+.playtag.done{background:var(--ok2);color:#dffff0}
+.champbox{text-align:center;margin:24px auto 10px;padding:28px 50px;border-radius:20px;max-width:780px;
+ background:linear-gradient(135deg,rgba(245,197,66,.14),rgba(255,159,28,.08));border:1.6px solid var(--gold);
+ box-shadow:0 0 50px rgba(245,197,66,.25)}
+.champbox .lbl{letter-spacing:4px;color:var(--gold);font-size:15px}
+.champbox .nm{font-size:clamp(34px,4.5vw,64px);font-weight:800;margin-top:6px;font-family:'Cinzel',Georgia,serif;
+ background:linear-gradient(180deg,#fff3cf,var(--gold) 55%,var(--goldD));-webkit-background-clip:text;background-clip:text;color:transparent}
+.toolbar{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+/* ---------- winner overlay ---------- */
+#overlay{position:fixed;inset:0;background:rgba(1,4,12,.93);z-index:500;display:flex;
+ align-items:center;justify-content:center;animation:fadein .4s;overflow:hidden}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+#overlay .orays{position:absolute;inset:-60%;
+ background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(245,197,66,.10) 0 6deg,transparent 6deg 20deg);
+ animation:spin 50s linear infinite}
+.obox{position:relative;text-align:center;padding:40px 70px}
+.obox .olbl{letter-spacing:5px;color:var(--gold);font-size:clamp(15px,1.6vw,24px);text-transform:uppercase}
+.obox .onm{font-size:clamp(46px,7vw,110px);font-weight:800;margin:16px 0 8px;font-family:'Cinzel',Georgia,serif;
+ background:linear-gradient(110deg,#fff3cf 20%,var(--gold) 40%,#fff8e1 50%,var(--gold) 60%,var(--goldD) 80%);
+ background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+ animation:shine 2.6s linear infinite;filter:drop-shadow(0 6px 26px rgba(245,197,66,.45))}
+@keyframes shine{from{background-position:200% 0}to{background-position:-20% 0}}
+.obox .osc{font-size:clamp(20px,2.2vw,34px);color:var(--mut);margin-bottom:32px}
+.obox .onm.red{background:linear-gradient(110deg,#ffd9e2 20%,#ff5468 40%,#ffe6eb 50%,#ff5468 60%,#b3122c 80%);
+ background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(0 6px 30px rgba(255,84,104,.55));animation:shine 1.6s linear infinite,deathshake 2.8s ease-in-out infinite}
+@keyframes deathshake{0%,88%,100%{transform:none}90%{transform:translateX(-5px)}93%{transform:translateX(5px)}96%{transform:translateX(-3px)}}
+#overlay .orays.red{background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(255,84,104,.10) 0 6deg,transparent 6deg 20deg)}
+@media(max-width:780px){.answers{grid-template-columns:1fr}.teamgrid{grid-template-columns:1fr}
+ .topbar{grid-template-columns:1fr;gap:12px}}
+</style>
+</head>
+<body>
+<div id="rays"></div><div id="vign"></div>
+<canvas id="confettiCv"></canvas>
+<!-- ============ SETUP ============ -->
+<div id="setup" class="screen">
+ <h1 class="logo">BNI Referral Games Night</h1>
+ <p class="sub">Six teams &middot; round 1 &middot; semi-final &middot; final</p>
+ <div class="card"><h2>1 &middot; Team names</h2><div class="teamgrid" id="teamInputs"></div></div>
+ <div class="card"><h2>2 &middot; Question bank</h2>
+  <div class="filebox">
+   <input type="file" id="qfile" accept=".csv,.xlsx,.xls">
+   <button class="btn ghost" id="loadSample">Use built-in sample questions</button>
+  </div>
+  <div id="qStatus"></div>
+  <p class="note">File needs columns: <b>Question, A, B, C, D, Correct</b> (Correct = letter A&ndash;D),
+   plus an optional <b>Owner</b> column with the submitting team&rsquo;s name (must match the team names above).
+   Round 1 serves each team their opponent&rsquo;s questions; Semi-Final and Final draw from the whole bank
+   (avoiding a team&rsquo;s own questions when possible). Template CSV is in this folder.</p>
+ </div>
+ <div class="card"><h2>3 &middot; Match settings</h2>
+  <div class="inline">
+   <label><input type="number" id="perTeam" value="5" min="1" max="50"> questions per team</label>
+   <label><input type="number" id="timerSecs" value="30" min="5" max="120"> seconds per question</label>
+  </div>
+  <p class="note">Set 5 per team for a quick test run &middot; 10 per team for the real tournament (20 questions per match).</p>
+ </div>
+ <button class="btn gold big" id="startBtn">Start Tournament &rarr;</button>
+ <button class="btn ghost big" id="resumeBtn" style="display:none">Resume saved tournament &#8617;</button>
+</div>
+<!-- ============ BRACKET ============ -->
+<div id="bracket" class="screen hidden">
+ <h1 class="logo">Tournament Bracket</h1>
+ <p class="sub">Highest-scoring Round 1 winner advances straight to the Final &middot; Round 1 uses opponents&rsquo; questions</p>
+ <div id="champBox"></div>
+ <div class="bracketwrap">
+  <div class="round"><div class="roundtitle">Round 1</div>
+   <div id="m0"></div><div id="m1"></div><div id="m2"></div></div>
+  <div class="round"><div class="roundtitle">Semi-Final</div><div id="m3"></div></div>
+  <div class="round"><div class="roundtitle">Final</div><div id="m4"></div></div>
+ </div>
+ <div class="toolbar">
+  <button class="btn" id="exportBtn">&#11015; Export results (CSV)</button>
+  <button class="btn ghost" id="poolBtn"></button>
+  <button class="btn danger" id="resetBtn">Reset tournament</button>
+ </div>
+</div>
+<!-- ============ GAME ============ -->
+<div id="game" class="screen hidden">
+ <div class="topbar">
+  <div class="tp" id="pA"><div class="tname"></div><div class="tscore">0</div><div class="dots"></div></div>
+  <div class="mid">
+   <div id="matchLabel"></div>
+   <div id="clock"><div class="cin"><span id="timerText">30</span></div></div>
+   <div id="qNum"></div>
+  </div>
+  <div class="tp" id="pB"><div class="tname"></div><div class="tscore">0</div><div class="dots"></div></div>
+ </div>
+ <div id="turnBanner"></div>
+ <div id="qWrap" class="hex"><div class="hx"><div class="hi" id="qText"></div></div></div>
+ <div class="answers" id="answers"></div>
+ <div class="gctrl">
+  <button class="btn" id="skipBtn">&#9197; Skip</button>
+  <button class="btn gold hidden" id="nextBtn">Next question &rarr;</button>
+  <button class="btn ghost" id="quitBtn">Exit to bracket</button>
+ </div>
+ <p class="kbd">Host keys: <span>1</span>&ndash;<span>4</span> lock answer &middot; <span>S</span> skip &middot; <span>N</span>/<span>Space</span> next</p>
+</div>
+<script>
+'use strict';
+/* ================= STATE ================= */
+const LS='bni-trivia-v3', SUSPENSE_MS=2600;
+let state=null, play=null;
+function freshState(teams,questions,timer,perTeam){
+ return {teams,timerSecs:timer,perTeam,questions,
+  queue:shuffle(questions.map((_,i)=>i)),
+  byeTeam:null,results:[],
+  matches:[
+   {name:'Round 1 — Match 1',a:0,b:1,sa:0,sb:0,done:false,winner:null},
+   {name:'Round 1 — Match 2',a:2,b:3,sa:0,sb:0,done:false,winner:null},
+   {name:'Round 1 — Match 3',a:4,b:5,sa:0,sb:0,done:false,winner:null},
+   {name:'Semi-Final',a:null,b:null,sa:0,sb:0,done:false,winner:null},
+   {name:'Final',a:null,b:null,sa:0,sb:0,done:false,winner:null}]};
+}
+function save(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}}
+function load(){try{return JSON.parse(localStorage.getItem(LS));}catch(e){return null;}}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function $(id){return document.getElementById(id);}
+function show(id){['setup','bracket','game'].forEach(s=>$(s).classList.toggle('hidden',s!==id));}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+/* ================= AUDIO ENGINE ================= */
+let AC=null;
+function ac(){AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+ if(AC.state==='suspended')AC.resume();return AC;}
+function tone(f,start,dur,type,gain,fEnd){
+ const a=ac(),t=a.currentTime,o=a.createOscillator(),g=a.createGain();
+ o.type=type||'sine';o.frequency.setValueAtTime(f,t+start);
+ if(fEnd)o.frequency.exponentialRampToValueAtTime(fEnd,t+start+dur);
+ o.connect(g);g.connect(a.destination);
+ g.gain.setValueAtTime(0,t+start);
+ g.gain.linearRampToValueAtTime(gain||.15,t+start+.015);
+ g.gain.exponentialRampToValueAtTime(.001,t+start+dur);
+ o.start(t+start);o.stop(t+start+dur+.05);
+}
+function snd(kind){
+ try{
+  if(kind==='lockin'){tone(220,0,.12,'sine',.16,110);tone(660,0,.05,'triangle',.07);}
+  else if(kind==='correct'){[523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,i*.07,.22,'sine',.15));tone(1046.5,.28,.85,'sine',.12);tone(1318.5,.3,.7,'sine',.05);tone(261.63,.18,.95,'triangle',.05);tone(329.63,.18,.95,'triangle',.05);tone(392,.18,.95,'triangle',.05);tone(2093,.34,.5,'sine',.03);}
+  else if(kind==='wrong'){tone(311,0,.3,'triangle',.17,247);tone(247,.26,.55,'triangle',.17,165);}
+  else if(kind==='tick'){tone(950,0,.06,'square',.07);}
+  else if(kind==='timeup'){tone(320,0,.25,'square',.13);tone(250,.25,.45,'square',.13);}
+  else if(kind==='skip'){tone(440,0,.1,'sine',.1);tone(330,.1,.14,'sine',.1);}
+  else if(kind==='intro'){}
+  else if(kind==='death'){tone(58,0,.5,'sine',.3);tone(55,.45,.6,'sine',.3);
+   tone(110,.9,1.4,'sawtooth',.07);tone(116.5,.9,1.4,'sawtooth',.07);tone(220,1.0,1.2,'sine',.05,233);}
+  else if(kind==='fanfare'){[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.13,.5,'triangle',.16));}
+ }catch(e){}
+}
+function suspense(ms){ /* soft heartbeat during the reveal pause */
+ try{
+  const s=ms/1000;
+  for(let b=0;b*0.75<s-.3;b++){tone(72,b*.75,.12,'sine',.12);tone(68,b*.75+.18,.1,'sine',.08);}
+ }catch(e){}
+}
+/* ================= CONFETTI (gold-tone) ================= */
+const cv=$('confettiCv'),cx=cv.getContext('2d');let parts=[],animOn=false;
+const PAL=['#f5c542','#ffdf8e','#ffffff','#ffb44d','#e8ecff','#d99e16'];
+function sizeCv(){cv.width=innerWidth;cv.height=innerHeight;}
+addEventListener('resize',sizeCv);sizeCv();
+function burst(n,big){
+ n=n||150;
+ for(let i=0;i<n;i++){
+  parts.push({x:innerWidth/2+(Math.random()-.5)*(big?innerWidth*.75:300),
+   y:big?innerHeight*.22:innerHeight*.36,
+   vx:(Math.random()-.5)*16,vy:Math.random()*-14-5,g:.33,
+   r:Math.random()*7+4,c:PAL[Math.floor(Math.random()*PAL.length)],
+   rot:Math.random()*Math.PI,vr:(Math.random()-.5)*.4,life:140});}
+ if(!animOn){animOn=true;requestAnimationFrame(cTick);}
+}
+function cTick(){
+ cx.clearRect(0,0,cv.width,cv.height);
+ for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.vx*=.99;p.rot+=p.vr;p.life--;
+  cx.save();cx.translate(p.x,p.y);cx.rotate(p.rot);cx.fillStyle=p.c;
+  cx.globalAlpha=Math.max(p.life/140,0);cx.fillRect(-p.r,-p.r/2,p.r*2,p.r);cx.restore();}
+ parts=parts.filter(p=>p.life>0&&p.y<cv.height+60);
+ if(parts.length)requestAnimationFrame(cTick);
+ else{animOn=false;cx.clearRect(0,0,cv.width,cv.height);}
+}
+/* ================= QUESTION PARSING ================= */
+let loadedQs=null;
+function parseCSV(text){
+ const rows=[];let row=[],cur='',inQ=false;
+ for(let i=0;i<text.length;i++){const ch=text[i];
+  if(inQ){if(ch==='"'){if(text[i+1]==='"'){cur+='"';i++;}else inQ=false;}else cur+=ch;}
+  else if(ch==='"')inQ=true;
+  else if(ch===','){row.push(cur);cur='';}
+  else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&text[i+1]==='\n')i++;
+   row.push(cur);cur='';if(row.some(c=>c.trim()!==''))rows.push(row);row=[];}
+  else cur+=ch;}
+ if(cur!==''||row.length){row.push(cur);if(row.some(c=>c.trim()!==''))rows.push(row);}
+ return rows;
+}
+function rowsToQuestions(rows){
+ if(!rows.length)throw new Error('Empty file');
+ const hdr=rows[0].map(h=>String(h).trim().toLowerCase());
+ const col=n=>hdr.indexOf(n);
+ const qi=col('question'),ai=col('a'),bi=col('b'),ci=col('c'),di=col('d'),cr=col('correct');
+ let ow=col('owner');if(ow<0)ow=col('team');
+ if(qi<0||ai<0||bi<0||ci<0||di<0||cr<0)
+  throw new Error('Header row must contain: Question, A, B, C, D, Correct (Owner optional)');
+ const qs=[];
+ for(let r=1;r<rows.length;r++){const row=rows[r].map(x=>String(x==null?'':x));
+  const idx={A:0,B:1,C:2,D:3}[(row[cr]||'').trim().toUpperCase()];
+  if((row[qi]||'').trim()&&idx!==undefined)
+   qs.push({q:row[qi].trim(),a:[row[ai],row[bi],row[ci],row[di]].map(x=>(x||'').trim()),correct:idx,
+    ownerName:ow>=0?(row[ow]||'').trim():''});}
+ if(!qs.length)throw new Error('No valid question rows found');
+ return qs;
+}
+function handleFile(file){
+ const st=$('qStatus');st.className='';st.textContent='Reading '+file.name+'…';
+ const fin=qs=>{loadedQs=qs;
+  st.textContent='✅ '+qs.length+' questions loaded'+(qs.length<100?' — a full 10-per-team tournament needs ~100+':'');
+  if(qs.length<100)st.className='warn';};
+ const fail=e=>{st.className='warn';st.textContent='❌ '+e.message;loadedQs=null;};
+ if(/\.csv$/i.test(file.name)){
+  const rd=new FileReader();
+  rd.onload=()=>{try{fin(rowsToQuestions(parseCSV(rd.result)));}catch(e){fail(e);}};
+  rd.readAsText(file);
+ }else{
+  const go=()=>{const rd=new FileReader();
+   rd.onload=()=>{try{const wb=XLSX.read(rd.result,{type:'array'});
+    const sh=wb.Sheets[wb.SheetNames[0]];
+    fin(rowsToQuestions(XLSX.utils.sheet_to_json(sh,{header:1,defval:''})));}catch(e){fail(e);}};
+   rd.readAsArrayBuffer(file);};
+  if(window.XLSX)go();
+  else{st.textContent='Loading Excel reader…';
+   const s=document.createElement('script');
+   s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+   s.onload=go;s.onerror=()=>fail(new Error('Could not load Excel reader — save as CSV instead'));
+   document.head.appendChild(s);}
+ }
+}
+const SAMPLE=[
+['What does BNI stand for?','Business Network International','Best Networking Inc','Business Niche Initiative','Branded Network Industries',0],
+['What is BNI\'s core philosophy?','Winner Takes All','Givers Gain','Pay It Backward','Network or Die',1],
+['Who founded BNI?','Tony Robbins','Dale Carnegie','Ivan Misner','Simon Sinek',2],
+['In which year was BNI founded?','1975','1985','1995','2005',1],
+['How often do BNI chapters typically meet?','Daily','Weekly','Monthly','Quarterly',1],
+['How many members per professional classification can a BNI chapter have?','One','Two','Three','Unlimited',0],
+['What does TYFCB stand for?','Thank You For Coming Back','Thank You For Closed Business','Take Your First Client Briefing','Thank Your Fellow Chapter Buddy',1],
+['What is a "1-2-1" in BNI?','A scoring system','A one-to-one meeting between two members','A type of referral slip','A membership fee plan',1],
+['What is the name of BNI\'s online member platform?','BNI Hub','BNI Connect','BNI Cloud','BNI Central',1],
+['In BNI, what is a "Power Team"?','The chapter leadership','Members in related professions who refer to each other','The top 3 scorers each month','The membership committee',1],
+['Which of these is a referral, in BNI terms?','A name on a list','A warm introduction to someone expecting your call','A cold call lead','A business card swap',1],
+['What do BNI members deliver each week in about 60 seconds?','A feature presentation','A weekly presentation about their business','A financial report','A member vote',1],
+['If a member cannot attend a meeting, they should ideally send a…','Apology email','Substitute','Gift','Voice note',1],
+['What is the longer 8–10 minute member slot in a BNI meeting called?','Keynote','Feature presentation','Spotlight hour','Masterclass',1],
+['What is the primary colour of the BNI logo?','Blue','Green','Red','Gold',2],
+['Who typically runs the weekly BNI chapter meeting?','The President','The newest member','BNI head office','A rotating guest',0],
+['What does "closed business" mean in BNI?','A company that shut down','Revenue generated from a referral','The end of a meeting','A private members deal',1],
+['What is the purpose of a Visitors Day?','Audit the chapter','Invite potential new members to experience the chapter','Elect new leadership','Review chapter finances',1],
+['Which role delivers the educational moment in a BNI meeting?','Education Coordinator','Treasurer','Visitor Host','Secretary',0],
+['What is the best practice after receiving a referral?','Wait a week to seem busy','Follow up promptly and report back','Pass it to someone else','File it for next quarter',1],
+['In which country was BNI founded?','United Kingdom','Australia','United States','Singapore',2],
+['Roughly how many times can a visitor usually attend a chapter before deciding to join?','Once','Twice','Five times','Unlimited',1],
+['Which of these best describes a BNI chapter?','A franchise outlet','A local group of business professionals, one per category','An online forum','A co-working space',1],
+['What should you bring plenty of to a BNI meeting?','Snacks','Business cards','Umbrellas','Invoices',1]
+].map(r=>({q:r[0],a:[r[1],r[2],r[3],r[4]],correct:r[5]}));
+/* ================= SETUP ================= */
+function initSetup(){
+ const tg=$('teamInputs');tg.innerHTML='';
+ for(let i=0;i<6;i++){const inp=document.createElement('input');
+  inp.type='text';inp.placeholder='Team '+(i+1);inp.id='team'+i;tg.appendChild(inp);}
+ $('qfile').addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0]);});
+ $('loadSample').addEventListener('click',()=>{loadedQs=SAMPLE.slice();
+  const st=$('qStatus');st.className='';
+  st.textContent='✅ '+SAMPLE.length+' sample questions loaded — enough for a 5-per-team test match';});
+ $('startBtn').addEventListener('click',()=>{
+  if(!loadedQs){alert('Load a question file (or the samples) first.');return;}
+  const teams=[];for(let i=0;i<6;i++)teams.push(($('team'+i).value||'').trim()||'Team '+(i+1));
+  const t=Math.max(5,Math.min(120,parseInt($('timerSecs').value)||30));
+  const pt=Math.max(1,Math.min(50,parseInt($('perTeam').value)||5));
+  const norm=x=>x.trim().toLowerCase();
+  const tmap={};teams.forEach((n,i)=>tmap[norm(n)]=i);
+  const unmatched=new Set();
+  const qs=loadedQs.map(q=>{let owner=null;
+   if(q.ownerName){const k=tmap[norm(q.ownerName)];
+    if(k!==undefined)owner=k;else unmatched.add(q.ownerName);}
+   return {q:q.q,a:q.a,correct:q.correct,owner};});
+  if(unmatched.size)alert('Heads up: some Owner names in the file don\u2019t match any team name and will be treated as central-bank questions:\n\n'+[...unmatched].join(', '));
+  state=freshState(teams,qs,t,pt);save();renderBracket();show('bracket');});
+ /* auto-load questions.csv when hosted (ignored when opened as a local file) */
+ if(location.protocol.startsWith('http')){
+  fetch('questions.csv').then(r=>r.ok?r.text():null).then(t=>{
+   if(!t||loadedQs)return;
+   try{loadedQs=rowsToQuestions(parseCSV(t));
+    $('qStatus').textContent='✅ '+loadedQs.length+' questions auto-loaded from questions.csv on this site';
+   }catch(e){}
+  }).catch(()=>{});
+ }
+ const saved=load();
+ if(saved&&saved.matches){$('resumeBtn').style.display='block';
+  $('resumeBtn').addEventListener('click',()=>{state=saved;renderBracket();show('bracket');});}
+}
+/* ================= BRACKET ================= */
+function updateBracketLogic(){
+ const sf=[state.matches[0],state.matches[1],state.matches[2]];
+ if(!sf.every(m=>m.done))return;
+ const winners=sf.map(m=>({team:m.winner,score:Math.max(m.sa,m.sb)}))
+  .sort((x,y)=>y.score-x.score);
+ if(state.byeTeam==null||!winners.some(w=>w.team===state.byeTeam))
+  state.byeTeam=winners[0].team;
+ const others=winners.filter(w=>w.team!==state.byeTeam).map(w=>w.team);
+ const po=state.matches[3],fi=state.matches[4];
+ if(!po.done){po.a=others[0];po.b=others[1];}
+ fi.a=state.byeTeam;if(po.done)fi.b=po.winner;
+}
+function matchHTML(m,idx){
+ const t=i=>i==null?'<i style="color:var(--mut)">TBD</i>':esc(state.teams[i]);
+ const ready=m.a!=null&&m.b!=null;
+ const cls='match'+(m.done?' done':'')+(!ready?' locked':'');
+ const av=i=>'<span class="av">'+(i==null?'?':esc((state.teams[i].trim()[0]||'?').toUpperCase()))+'</span>';
+ const rw=(ti,sc,win)=>'<div class="mrow'+(win?' winner':'')+'"><span class="tm">'+av(ti)+t(ti)+(win?' 👑':'')+
+  '</span><span class="sc">'+(m.done?sc:'')+'</span></div>';
+ return '<div class="'+cls+'" onclick="clickMatch('+idx+')"><div class="mname">'+m.name+'</div>'+
+  rw(m.a,m.sa,m.done&&m.winner===m.a)+rw(m.b,m.sb,m.done&&m.winner===m.b)+
+  (ready&&!m.done?'<div class="playtag">PLAY ▶</div>':'')+
+  (m.done?'<div class="playtag done">DONE ✓</div>':'')+'</div>';
+}
+function drawFlow(){
+ if(!state||$('bracket').classList.contains('hidden'))return;
+ const wrap=document.querySelector('.bracketwrap');
+ let svg=$('flowSvg');
+ if(!svg){svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.id='flowSvg';wrap.insertBefore(svg,wrap.firstChild);}
+ const wr=wrap.getBoundingClientRect();
+ svg.setAttribute('viewBox','0 0 '+wr.width+' '+wr.height);
+ const box=i=>{const r=$('m'+i).getBoundingClientRect();
+  return{L:r.left-wr.left,R:r.right-wr.left,Y:r.top-wr.top+r.height/2};};
+ const path=(a,b,cls)=>{const mx=(a.R+b.L)/2;
+  return '<path class="'+cls+'" d="M'+a.R+' '+a.Y+' C '+mx+' '+a.Y+', '+mx+' '+b.Y+', '+b.L+' '+b.Y+'"/>';};
+ const sf=[state.matches[0],state.matches[1],state.matches[2]];
+ const r1done=sf.every(m=>m.done);
+ const semi=box(3),fin=box(4);
+ let h='',goldPath=null;
+ for(let i=0;i<3;i++){
+  const b=box(i);
+  if(r1done&&sf[i].winner===state.byeTeam){goldPath=b;h+=path(b,fin,'fl gold');}
+  else h+=path(b,semi,r1done?'fl solid':'fl');
+ }
+ if(!r1done)h+=path(box(1),fin,'fl goldfaint');
+ h+=path(semi,fin,state.matches[3].done?'fl solid':'fl');
+ const lb=goldPath||box(1);
+ h+='<text class="flowlbl" x="'+((lb.R+fin.L)/2-46)+'" y="'+((lb.Y+fin.Y)/2-10)+'">TOP SCORER</text>';
+ svg.innerHTML=h;
+}
+function renderBracket(){
+ updateBracketLogic();
+ state.matches.forEach((m,i)=>{$('m'+i).innerHTML=matchHTML(m,i);});
+ const fi=state.matches[4],cb=$('champBox');
+ cb.innerHTML=fi.done?'<div class="champbox"><div class="lbl">🏆 CHAMPION 🏆</div><div class="nm">'+esc(state.teams[fi.winner])+'</div></div>':'';
+ $('poolBtn').textContent='🗂 '+state.queue.length+' questions left in pool';
+ save();
+ requestAnimationFrame(drawFlow);
+}
+function clickMatch(i){
+ const m=state.matches[i];
+ if(m.a==null||m.b==null)return;
+ if(m.done&&!confirm('This match is finished. Replay it? (Scores will reset)'))return;
+ startMatch(i);
+}
+/* ================= MATCH PLAY ================= */
+function startMatch(mi){
+ const m=state.matches[mi];
+ m.sa=0;m.sb=0;m.done=false;m.winner=null;
+ if(mi===3)state.matches[4].b=null;
+ if(mi<3){const po=state.matches[3],fi=state.matches[4];
+  po.done=false;po.sa=0;po.sb=0;po.winner=null;fi.done=false;fi.winner=null;}
+ play={mi,asked:[0,0],quota:state.perTeam||10,qIdx:null,phase:'idle',turn:0,hist:[[],[]]};
+ $('matchLabel').textContent=m.name;
+ show('game');nextQuestion();
+}
+function teamOf(side){const m=state.matches[play.mi];return state.teams[side===0?m.a:m.b];}
+function updatePanels(){
+ const m=state.matches[play.mi];
+ [['pA',m.a,m.sa,0],['pB',m.b,m.sb,1]].forEach(([id,ti,sc,side])=>{
+  const p=$(id),scEl=p.querySelector('.tscore');
+  p.querySelector('.tname').textContent=state.teams[ti];
+  if(String(sc)!==scEl.textContent&&scEl.textContent!==''){
+   scEl.classList.remove('pop');void scEl.offsetWidth;scEl.classList.add('pop');}
+  scEl.textContent=sc;
+  let dh='';for(let i=0;i<play.quota;i++){
+   const r=play.hist[side][i];
+   dh+='<span class="dot'+(r===true?' ok':r===false?' bad':'')+'"></span>';}
+  p.querySelector('.dots').innerHTML=dh;
+  p.classList.toggle('active',play.turn===side);});
+}
+function drawQuestion(){
+ const m=state.matches[play.mi],Q=state.questions;
+ const answering=play.turn===0?m.a:m.b, opp=play.turn===0?m.b:m.a;
+ let pick=-1;
+ if(play.mi<3){ /* Round 1: serve the opponent's submitted questions first */
+  pick=state.queue.findIndex(i=>Q[i].owner===opp);
+  if(pick<0)pick=state.queue.findIndex(i=>Q[i].owner!==answering);
+ }else{ /* Semi-Final & Final: central bank, avoid a team's own questions if possible */
+  pick=state.queue.findIndex(i=>Q[i].owner!==answering);
+ }
+ if(pick<0)pick=0;
+ return state.queue.splice(pick,1)[0];
+}
+function nextQuestion(){
+ const m=state.matches[play.mi];
+ if(play.asked[0]>=play.quota&&play.asked[1]>=play.quota){
+  if(m.sa===m.sb)return showDeathMatch();
+  return endMatch();
+ }
+ let turn=(play.asked[0]+play.asked[1])%2;
+ if(play.asked[turn]>=play.quota)turn=1-turn;
+ play.turn=turn;play.phase='open';
+ if(!state.queue.length){alert('Question pool is empty! Ending match with current scores.');return endMatch(true);}
+ play.qIdx=drawQuestion();
+ const q=state.questions[play.qIdx];
+ snd('intro');
+ const accent=turn===0?'#f5c542':'#4dd7ff';
+ const qOwner=state.questions[play.qIdx].owner;
+ $('turnBanner').innerHTML='🎯 <b style="color:'+accent+'">'+esc(teamOf(turn))+'</b> — '+
+  (qOwner!=null&&qOwner!==(turn===0?state.matches[play.mi].a:state.matches[play.mi].b)?'a question from <b>'+esc(state.teams[qOwner])+'</b>':'your question');
+ $('qNum').textContent='Question '+(play.asked[0]+play.asked[1]+1)+' of '+(play.quota*2);
+ const qw=$('qWrap');qw.style.animation='none';qw.classList.remove('sweep');void qw.offsetWidth;
+ qw.style.animation='slidein .4s ease';qw.classList.add('sweep');
+ $('qText').textContent=q.q;
+ const an=$('answers');an.innerHTML='';
+ 'ABCD'.split('').forEach((L,i)=>{
+  const d=document.createElement('div');
+  d.className='ans hex';d.id='ans'+i;
+  d.style.animation='slidein .45s ease '+(i*.08)+'s backwards';
+  d.innerHTML='<div class="hx"><div class="hi"><span class="ltr">'+L+':</span><span>'+esc(q.a[i])+'</span></div></div>';
+  d.addEventListener('click',()=>lockAnswer(i));an.appendChild(d);});
+ $('nextBtn').classList.add('hidden');$('skipBtn').classList.remove('hidden');
+ updatePanels();startTimer();save();
+}
+/* --- two-stage WWTBAM reveal: lock in → suspense → reveal --- */
+function lockAnswer(i){
+ if(!play||play.phase!=='open')return;
+ play.phase='locked';stopTimer();
+ const q=state.questions[play.qIdx];
+ for(let k=0;k<4;k++){const el=$('ans'+k);el.classList.add('dead');
+  if(k!==i&&k!==q.correct)el.classList.add('dim');}
+ if(i>=0){$('ans'+i).classList.add('locked');
+  $('turnBanner').innerHTML='🔒 <b>'+esc(teamOf(play.turn))+'</b> locks in… is that the final answer?';
+  snd('lockin');suspense(SUSPENSE_MS);
+  setTimeout(()=>reveal(i),SUSPENSE_MS);}
+ else{ $('turnBanner').innerHTML='⏰ <b>Time\'s up!</b>';snd('timeup');
+  setTimeout(()=>reveal(-1),900);}
+}
+function reveal(i){
+ if(!play)return;
+ play.phase='revealed';
+ const q=state.questions[play.qIdx],m=state.matches[play.mi];
+ const ok=i===q.correct;
+ const el=i>=0?$('ans'+i):null;
+ if(el)el.classList.remove('locked');
+ $('ans'+q.correct).classList.remove('dim');
+ $('ans'+q.correct).classList.add('right');
+ if(ok){snd('correct');burst(190);
+  $('turnBanner').innerHTML='✨ <b>CORRECT!</b> Well done, '+esc(teamOf(play.turn))+'!';
+  if(play.turn===0)m.sa++;else m.sb++;}
+ else{if(el)el.classList.add('wrong');
+  snd('wrong');
+  $('turnBanner').innerHTML=i>=0?'❌ <b>Wrong!</b> The correct answer flashes green':'⏰ <b>Time\'s up!</b> Correct answer shown';}
+ play.hist[play.turn][play.asked[play.turn]]=ok;
+ play.asked[play.turn]++;
+ $('nextBtn').classList.remove('hidden');$('skipBtn').classList.add('hidden');
+ updatePanels();save();
+}
+function skipQ(){
+ if(!play||play.phase!=='open')return;
+ stopTimer();snd('skip');
+ state.queue.push(play.qIdx);
+ $('turnBanner').innerHTML='⏭ Skipped — question returned to the pool';
+ setTimeout(nextQuestion,450);
+}
+function showDeathMatch(){
+ stopTimer();snd('death');
+ const m=state.matches[play.mi];
+ const ov=document.createElement('div');ov.id='overlay';
+ ov.innerHTML='<div class="orays red"></div><div class="obox">'+
+  '<div class="olbl" style="color:var(--bad1)">⚔️ Scores level at '+m.sa+'–'+m.sb+' ⚔️</div>'+
+  '<div class="onm red">DEATH MATCH</div>'+
+  '<div class="osc">Sudden death — one question each until a team breaks away</div>'+
+  '<button class="btn gold big" onclick="startDeathMatch()">Fight ⚔</button></div>';
+ document.body.appendChild(ov);
+}
+function startDeathMatch(){
+ const o=$('overlay');if(o)o.remove();
+ play.quota++;snd('fanfare');
+ $('turnBanner').innerHTML='⚔️ <b style="color:var(--bad1)">DEATH MATCH</b> — sudden death!';
+ nextQuestion();
+}
+/* ================= TIMER ================= */
+let timerInt=null,tLeft=0;
+function startTimer(){
+ stopTimer();tLeft=state.timerSecs;renderTimer();
+ timerInt=setInterval(()=>{tLeft--;renderTimer();
+  if(tLeft<=5&&tLeft>0)snd('tick');
+  if(tLeft<=0){stopTimer();lockAnswer(-1);}},1000);
+}
+function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}}
+function renderTimer(){
+ const c=$('clock');
+ $('timerText').textContent=tLeft;
+ c.style.setProperty('--p',(tLeft/state.timerSecs*100));
+ c.classList.toggle('low',tLeft<=5);
+}
+/* ================= MATCH END ================= */
+function endMatch(forced){
+ stopTimer();
+ const m=state.matches[play.mi];
+ m.done=true;
+ m.winner=m.sa>=m.sb?m.a:m.b;
+ if(m.sa===m.sb&&forced)m.winner=m.a;
+ state.results.push({match:m.name,teamA:state.teams[m.a],scoreA:m.sa,
+  teamB:state.teams[m.b],scoreB:m.sb,winner:state.teams[m.winner],
+  when:new Date().toLocaleString()});
+ save();
+ snd('fanfare');burst(340,true);setTimeout(()=>burst(240,true),550);
+ const ov=document.createElement('div');ov.id='overlay';
+ const isFinal=play.mi===4;
+ ov.innerHTML='<div class="orays"></div><div class="obox">'+
+  '<div class="olbl">'+(isFinal?'🏆 Tournament Champion 🏆':'Winner — '+esc(m.name))+'</div>'+
+  '<div class="onm">'+esc(state.teams[m.winner])+'</div>'+
+  '<div class="osc">'+esc(state.teams[m.a])+' '+m.sa+' — '+m.sb+' '+esc(state.teams[m.b])+'</div>'+
+  '<button class="btn gold big" onclick="closeOverlay()">Back to bracket →</button></div>';
+ document.body.appendChild(ov);
+ if(isFinal){let k=0;const iv=setInterval(()=>{burst(200,true);if(++k>5)clearInterval(iv);},900);}
+ play=null;
+}
+function closeOverlay(){const o=$('overlay');if(o)o.remove();renderBracket();show('bracket');}
+/* ================= EXPORT / RESET / KEYS ================= */
+function exportCSV(){
+ if(!state.results.length){alert('No completed matches yet.');return;}
+ const qq=v=>'"'+String(v).replace(/"/g,'""')+'"';
+ let csv='Match,Team A,Score A,Team B,Score B,Winner,Completed At\n';
+ state.results.forEach(r=>{csv+=[r.match,r.teamA,r.scoreA,r.teamB,r.scoreB,r.winner,r.when].map(qq).join(',')+'\n';});
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+ a.download='BNI_games_night_results.csv';a.click();
+}
+$('skipBtn').addEventListener('click',skipQ);
+$('nextBtn').addEventListener('click',()=>{if(play&&play.phase==='revealed')nextQuestion();});
+$('quitBtn').addEventListener('click',()=>{
+ if(confirm('Exit this match? Its progress will be lost (questions used stay used).')){
+  stopTimer();play=null;renderBracket();show('bracket');}});
+$('exportBtn').addEventListener('click',exportCSV);
+$('resetBtn').addEventListener('click',()=>{
+ if(confirm('Reset the WHOLE tournament? Scores and bracket will be wiped.')){
+  localStorage.removeItem(LS);location.reload();}});
+document.addEventListener('keydown',e=>{
+ if($('game').classList.contains('hidden')||!play)return;
+ if(e.key>='1'&&e.key<='4'&&play.phase==='open')lockAnswer(+e.key-1);
+ else if((e.key==='s'||e.key==='S')&&play.phase==='open')skipQ();
+ else if((e.key==='n'||e.key==='N'||e.key===' ')&&play.phase==='revealed'){e.preventDefault();nextQuestion();}});
+addEventListener('resize',()=>requestAnimationFrame(drawFlow));
+initSetup();
+</script>
+</body>
+</html>
