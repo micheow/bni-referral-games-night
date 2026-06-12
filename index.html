@@ -289,7 +289,7 @@ input:focus{outline:2px solid var(--gold)}
   <div id="qWarn"></div>
   <p class="note">File needs columns: <b>Question, A, B, C, D, Correct</b> (Correct = letter A&ndash;D),
    plus optional <b>Owner</b> (submitting team&rsquo;s name, must match above) and <b>Type</b> columns.
-   Set Type to <b>Open</b> for the Final&rsquo;s open-ended round (2 per team, host scores 0&ndash;5; put a suggested answer in column A).
+   Set Type to <b>Open</b> for the Final&rsquo;s open-ended round (2 per team, host scores 0&ndash;3; put a suggested answer in column A).
    Round 1 serves each team their opponent&rsquo;s questions; Semi-Final and Final draw from the whole bank
    (avoiding a team&rsquo;s own questions when possible). Template CSV is in this folder.</p>
  </div>
@@ -445,6 +445,14 @@ function unlockAudio(){
   src.buffer=b;src.connect(AC.destination);src.start(0);
  }catch(e){}
 }
+let dmAudio=null,dmReady=false;
+['deathmatch.wav','deathmatch.mp3'].forEach(src=>{
+ if(dmReady)return;
+ const a=new Audio();
+ a.addEventListener('canplaythrough',()=>{if(!dmReady){dmAudio=a;dmReady=true;}});
+ a.addEventListener('error',()=>{});
+ a.src=src;a.load();
+});
 document.addEventListener('touchend',unlockAudio,{passive:true});
 document.addEventListener('click',unlockAudio);
 document.addEventListener('click',e=>{
@@ -858,8 +866,8 @@ function nextOpenQuestion(){
  $('answers').innerHTML='<div class="openbox">'+
   '<div class="openlbl">🎤 Give your best answer! More accurate and complete answers earn more points</div>'+
   (q.answer?'<button class="btn ghost" id="revealBtn">Reveal suggested answer</button><div id="modelAns" class="hidden"></div>':'')+
-  '<div class="chiplbl">Award points (keys 0–5)</div>'+
-  '<div class="chips">'+[0,1,2,3,4,5].map(p=>'<button class="chip" onclick="awardOpen('+p+')">'+p+'</button>').join('')+'</div></div>';
+  '<div class="chiplbl">Award points (keys 0–3)</div>'+
+  '<div class="chips">'+[0,1,2,3].map(p=>'<button class="chip" onclick="awardOpen('+p+')">'+p+'</button>').join('')+'</div></div>';
  if(q.answer){$('modelAns').textContent=q.answer;
   $('revealBtn').addEventListener('click',()=>{$('modelAns').classList.remove('hidden');$('revealBtn').classList.add('hidden');});}
  $('nextBtn').classList.add('hidden');$('skipBtn').classList.remove('hidden');
@@ -893,7 +901,9 @@ function skipQ(){
  setTimeout(nextQuestion,450);
 }
 function showDeathMatch(){
- stopTimer();snd('death');
+ stopTimer();
+ if(dmReady){try{dmAudio.currentTime=0;dmAudio.play().catch(()=>snd('death'));}catch(e){snd('death');}}
+ else snd('death');
  const m=state.matches[play.mi];
  if(m.regA==null){m.regA=m.sa;m.regB=m.sb;}
  const ov=document.createElement('div');ov.id='overlay';
@@ -996,7 +1006,7 @@ $('resetBtn').addEventListener('click',()=>{
   localStorage.removeItem(LS);location.reload();}});
 document.addEventListener('keydown',e=>{
  if($('game').classList.contains('hidden')||!play)return;
- if(play.phase==='openq'&&e.key>='0'&&e.key<='5')awardOpen(+e.key);
+ if(play.phase==='openq'&&e.key>='0'&&e.key<='3')awardOpen(+e.key);
  else if(e.key>='1'&&e.key<='4'&&play.phase==='open')lockAnswer(+e.key-1);
  else if((e.key==='s'||e.key==='S')&&play.phase==='open')skipQ();
  else if((e.key==='u'||e.key==='U')&&play.phase==='revealed')undoLast();
