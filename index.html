@@ -305,7 +305,7 @@ input:focus{outline:2px solid var(--gold)}
  <h1 class="logo">Tournament Bracket</h1>
  <p class="sub">Highest-scoring Round 1 winner advances straight to the Final &middot; Round 1 uses opponents&rsquo; questions</p>
  <div id="champBox"></div>
- <div id="seedNote"><b>Who takes the fast-track to the Final?</b> Ranked on the main questions only — sudden death decides who advances, not the ranking.</div>
+ <div id="seedNote"><b>Who takes the fast-track to the Final?</b> Ranked on the main questions only. Sudden death decides who advances, not the ranking.</div>
  <div class="bracketwrap">
   <div class="round"><div class="roundtitle">Round 1</div>
    <div id="m0"></div><div id="m1"></div><div id="m2"></div></div>
@@ -351,18 +351,18 @@ function freshState(teams,questions,timer,perTeam){
   openQueue:shuffle(questions.map((_,i)=>i).filter(i=>(questions[i].type||'mcq')==='open')),
   byeTeam:null,results:[],
   matches:[
-   {name:'Round 1 — Match 1',a:0,b:1,sa:0,sb:0,done:false,winner:null},
-   {name:'Round 1 — Match 2',a:2,b:3,sa:0,sb:0,done:false,winner:null},
-   {name:'Round 1 — Match 3',a:4,b:5,sa:0,sb:0,done:false,winner:null},
+   {name:'Round 1 · Match 1',a:0,b:1,sa:0,sb:0,done:false,winner:null},
+   {name:'Round 1 · Match 2',a:2,b:3,sa:0,sb:0,done:false,winner:null},
+   {name:'Round 1 · Match 3',a:4,b:5,sa:0,sb:0,done:false,winner:null},
    {name:'Semi-Final',a:null,b:null,sa:0,sb:0,done:false,winner:null},
    {name:'Final',a:null,b:null,sa:0,sb:0,done:false,winner:null},
-   {name:'Sudden Death — Bye Decider',a:null,b:null,sa:0,sb:0,done:false,winner:null},
-   {name:'Sudden Death — Stage 1',a:null,b:null,sa:0,sb:0,done:false,winner:null}]};
+   {name:'Sudden Death · Bye Decider',a:null,b:null,sa:0,sb:0,done:false,winner:null},
+   {name:'Sudden Death · Stage 1',a:null,b:null,sa:0,sb:0,done:false,winner:null}]};
 }
 function save(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}}
 function load(){try{const o=JSON.parse(localStorage.getItem(LS));
- if(o&&o.matches&&o.matches.length===5)o.matches.push({name:'Sudden Death — Bye Decider',a:null,b:null,sa:0,sb:0,done:false,winner:null});
- if(o&&o.matches&&o.matches.length===6)o.matches.push({name:'Sudden Death — Stage 1',a:null,b:null,sa:0,sb:0,done:false,winner:null});
+ if(o&&o.matches&&o.matches.length===5)o.matches.push({name:'Sudden Death · Bye Decider',a:null,b:null,sa:0,sb:0,done:false,winner:null});
+ if(o&&o.matches&&o.matches.length===6)o.matches.push({name:'Sudden Death · Stage 1',a:null,b:null,sa:0,sb:0,done:false,winner:null});
  if(o&&!o.openQueue)o.openQueue=[];
  return o;}catch(e){return null;}}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -389,6 +389,7 @@ function sndNow(kind){
   else if(kind==='correct'){[523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,i*.07,.22,'sine',.15));tone(1046.5,.28,.85,'sine',.12);tone(1318.5,.3,.7,'sine',.05);tone(261.63,.18,.95,'triangle',.05);tone(329.63,.18,.95,'triangle',.05);tone(392,.18,.95,'triangle',.05);tone(2093,.34,.5,'sine',.03);}
   else if(kind==='wrong'){tone(311,0,.3,'triangle',.17,247);tone(247,.26,.55,'triangle',.17,165);}
   else if(kind==='tick'){tone(950,0,.06,'square',.07);}
+  else if(kind==='click'){tone(700,0,.045,'sine',.09);tone(1050,.015,.04,'sine',.05);}
   else if(kind==='timeup'){tone(320,0,.25,'square',.13);tone(250,.25,.45,'square',.13);}
   else if(kind==='skip'){tone(440,0,.1,'sine',.1);tone(330,.1,.14,'sine',.1);}
   else if(kind==='intro'){}
@@ -422,6 +423,12 @@ function unlockAudio(){
 }
 document.addEventListener('touchend',unlockAudio,{passive:true});
 document.addEventListener('click',unlockAudio);
+document.addEventListener('click',e=>{
+ const b=e.target.closest('button,.match');
+ if(!b)return;
+ if(b.classList.contains('choice')||b.classList.contains('chip'))return; /* these have their own sounds */
+ snd('click');
+},true);
 /* ================= CONFETTI (gold-tone) ================= */
 const cv=$('confettiCv'),cx=cv.getContext('2d');let parts=[],animOn=false;
 const PAL=['#f5c542','#ffdf8e','#ffffff','#ffb44d','#e8ecff','#d99e16'];
@@ -486,7 +493,7 @@ function handleFile(file){
  const st=$('qStatus');st.className='';st.textContent='Reading '+file.name+'…';
  const fin=qs=>{loadedQs=qs;
   const op=qs.filter(q=>q.type==='open').length,mc=qs.length-op;
-  st.textContent='✅ '+mc+' multiple-choice + '+op+' open-ended loaded'+(mc<100?' — a full 10-per-team tournament needs ~100+ MCQs':'');
+  st.textContent='✅ '+mc+' multiple-choice + '+op+' open-ended loaded'+(mc<100?'. A full 10-per-team tournament needs ~100+ MCQs':'');
   if(mc<100)st.className='warn';};
  const fail=e=>{st.className='warn';st.textContent='❌ '+e.message;loadedQs=null;};
  if(/\.csv$/i.test(file.name)){
@@ -503,7 +510,7 @@ function handleFile(file){
   else{st.textContent='Loading Excel reader…';
    const s=document.createElement('script');
    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-   s.onload=go;s.onerror=()=>fail(new Error('Could not load Excel reader — save as CSV instead'));
+   s.onload=go;s.onerror=()=>fail(new Error('Could not load Excel reader. Save as CSV instead'));
    document.head.appendChild(s);}
  }
 }
@@ -546,7 +553,7 @@ function initSetup(){
  $('qfile').addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0]);});
  $('loadSample').addEventListener('click',()=>{loadedQs=SAMPLE.slice();
   const st=$('qStatus');st.className='';
-  st.textContent='✅ '+SAMPLE.length+' sample questions loaded — enough for a 5-per-team test match';});
+  st.textContent='✅ '+SAMPLE.length+' sample questions loaded, enough for a 5-per-team test match';});
  $('startBtn').addEventListener('click',()=>{
   if(!loadedQs){alert('Load a question file (or the samples) first.');return;}
   const teams=[];for(let i=0;i<6;i++)teams.push(($('team'+i).value||'').trim()||'Team '+(i+1));
@@ -560,7 +567,7 @@ function initSetup(){
     if(k!==undefined)owner=k;else unmatched.add(q.ownerName);}
    return {q:q.q,a:q.a,correct:q.correct,owner,type:q.type||'mcq',answer:q.answer||''};});
   const opn=qs.filter(x=>x.type==='open').length;
-  if(opn<4)alert('Note: '+opn+' open-ended question'+(opn===1?'':'s')+' loaded — the Final\u2019s open round uses 4 (2 per team). '+(opn?'It will stop early when they run out.':'The Final will be multiple-choice only.'));
+  if(opn<4)alert('Note: '+opn+' open-ended question'+(opn===1?'':'s')+' loaded. The Final\u2019s open round uses 4 (2 per team). '+(opn?'It will stop early when they run out.':'The Final will be multiple-choice only.'));
   if(unmatched.size)alert('Heads up: some Owner names in the file don\u2019t match any team name and will be treated as central-bank questions:\n\n'+[...unmatched].join(', '));
   state=freshState(teams,qs,t,pt);save();renderBracket();show('bracket');});
  /* auto-load questions.csv when hosted (ignored when opened as a local file) */
@@ -738,7 +745,7 @@ function nextQuestion(){
  snd('intro');
  const accent=turn===0?'#f5c542':'#4dd7ff';
  const qOwner=state.questions[play.qIdx].owner;
- $('turnBanner').innerHTML='🎯 <b style="color:'+accent+'">'+esc(teamOf(turn))+'</b> — '+
+ $('turnBanner').innerHTML='🎯 <b style="color:'+accent+'">'+esc(teamOf(turn))+'</b>, '+
   (qOwner!=null&&qOwner!==(turn===0?state.matches[play.mi].a:state.matches[play.mi].b)?'a question from <b>'+esc(state.teams[qOwner])+'</b>':'your question');
  $('qNum').textContent='Question '+(play.asked[0]+play.asked[1]+1)+' of '+(play.quota*2+(play.mi===4?4:0));
  const qw=$('qWrap');qw.style.animation='none';qw.classList.remove('sweep');void qw.offsetWidth;
@@ -802,13 +809,13 @@ function nextOpenQuestion(){
  const q=state.questions[play.qIdx];
  const accent=turn===0?'#f5c542':'#4dd7ff';
  snd('intro');
- $('turnBanner').innerHTML='🎤 <b style="color:'+accent+'">'+esc(teamOf(turn))+'</b> — open-ended question '+(play.openAsked[turn]+1)+' of 2';
- $('qNum').textContent='Open round — host awards the points';
+ $('turnBanner').innerHTML='🎤 <b style="color:'+accent+'">'+esc(teamOf(turn))+'</b>, open-ended question '+(play.openAsked[turn]+1)+' of 2';
+ $('qNum').textContent='Open round: host awards the points';
  const qw=$('qWrap');qw.style.animation='none';qw.classList.remove('sweep');void qw.offsetWidth;
  qw.style.animation='slidein .4s ease';qw.classList.add('sweep');
  $('qText').textContent=q.q;
  $('answers').innerHTML='<div class="openbox">'+
-  '<div class="openlbl">🎤 Give your best answer — the more accurate and complete, the more points you earn</div>'+
+  '<div class="openlbl">🎤 Give your best answer! More accurate and complete answers earn more points</div>'+
   (q.answer?'<button class="btn ghost" id="revealBtn">Reveal suggested answer</button><div id="modelAns" class="hidden"></div>':'')+
   '<div class="chiplbl">Award points (keys 0–5)</div>'+
   '<div class="chips">'+[0,1,2,3,4,5].map(p=>'<button class="chip" onclick="awardOpen('+p+')">'+p+'</button>').join('')+'</div></div>';
@@ -836,11 +843,11 @@ function awardOpen(p){
 function skipQ(){
  if(!play)return;
  if(play.phase==='openq'){stopTimer();snd('skip');state.openQueue.push(play.qIdx);
-  $('turnBanner').innerHTML='⏭ Skipped — returned to the pool';setTimeout(nextQuestion,450);return;}
+  $('turnBanner').innerHTML='⏭ Skipped. Returned to the pool';setTimeout(nextQuestion,450);return;}
  if(play.phase!=='open')return;
  stopTimer();snd('skip');
  state.queue.push(play.qIdx);
- $('turnBanner').innerHTML='⏭ Skipped — question returned to the pool';
+ $('turnBanner').innerHTML='⏭ Skipped. Question returned to the pool';
  setTimeout(nextQuestion,450);
 }
 function showDeathMatch(){
@@ -858,7 +865,7 @@ function showDeathMatch(){
 function startDeathMatch(){
  const o=$('overlay');if(o)o.remove();
  play.quota++;snd('fanfare');
- $('turnBanner').innerHTML='⚔️ <b style="color:var(--bad1)">DEATH MATCH</b> — sudden death!';
+ $('turnBanner').innerHTML='⚔️ <b style="color:var(--bad1)">DEATH MATCH</b>: sudden death!';
  nextQuestion();
 }
 function undoLast(){
@@ -875,7 +882,7 @@ function undoLast(){
   state.openQueue.unshift(L.qIdx);
  }
  play.last=null;snd('skip');
- $('turnBanner').innerHTML='↩ Undone — same question coming back';
+ $('turnBanner').innerHTML='↩ Undone. Same question coming back';
  updatePanels();save();
  setTimeout(nextQuestion,400);
 }
@@ -887,7 +894,7 @@ function startTimer(secs){
   if(tLeft<=5&&tLeft>0)snd('tick');
   if(tLeft<=0){stopTimer();
    if(play&&play.phase==='openq'){snd('timeup');
-    $('turnBanner').innerHTML='⏰ <b>Time!</b> Host — award the points';}
+    $('turnBanner').innerHTML='⏰ <b>Time!</b> Host, award the points';}
    else lockAnswer(-1);}},1000);
 }
 function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}}
@@ -914,10 +921,10 @@ function endMatch(forced){
  const isFinal=play.mi===4;
  const wn=m.winner,ln=wn===m.a?m.b:m.a,ws=wn===m.a?m.sa:m.sb,lsc=wn===m.a?m.sb:m.sa;
  ov.innerHTML='<div class="orays"></div><div class="obox">'+
-  '<div class="olbl">'+(isFinal?'🏆 Tournament Champion 🏆':play.mi===5?'⚡ Straight to the Final ⚡':play.mi===6?'⚔ Survives — one more duel for the Final spot':'Winner — '+esc(m.name))+'</div>'+
+  '<div class="olbl">'+(isFinal?'🏆 Tournament Champion 🏆':play.mi===5?'⚡ Straight to the Final ⚡':play.mi===6?'⚔ Survives! One more duel for the Final spot':'Winner: '+esc(m.name))+'</div>'+
   '<div class="onm">'+esc(state.teams[m.winner])+'</div>'+
   '<div class="oscore"><div class="oside win"><div class="onmS">'+esc(state.teams[wn])+'</div><div class="onum">'+ws+'</div></div>'+
-  '<div class="odash">—</div>'+
+  '<div class="odash">:</div>'+
   '<div class="oside lose"><div class="onmS">'+esc(state.teams[ln])+'</div><div class="onum">'+lsc+'</div></div></div>'+
   '<button class="btn gold big" onclick="closeOverlay()">Back to bracket →</button></div>';
  document.body.appendChild(ov);
