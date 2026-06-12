@@ -167,7 +167,7 @@ input:focus{outline:2px solid var(--gold)}
 .fl.solid{stroke:rgba(169,194,239,.85);stroke-dasharray:none}
 .fl.gold{stroke:var(--gold);stroke-width:3.5;stroke-dasharray:none;filter:drop-shadow(0 0 7px rgba(245,197,66,.7))}
 .fl.goldfaint{stroke:rgba(245,197,66,.4);stroke-width:2.5;stroke-dasharray:4 9}
-.flowlbl{fill:var(--gold);font-size:11px;letter-spacing:2px;font-weight:700}
+.flowlbl{fill:var(--gold);font-size:10px;letter-spacing:1.5px;font-weight:700}
 .round{display:flex;flex-direction:column;gap:22px;justify-content:center;min-width:320px;position:relative;z-index:1}
 .roundtitle{display:flex;align-items:center;gap:14px;color:var(--gold);font-size:14px;letter-spacing:4px;
  text-transform:uppercase;font-family:'Cinzel',Georgia,serif;font-weight:600}
@@ -613,7 +613,7 @@ function matchHTML(m,idx){
  return '<div class="'+cls+'" onclick="clickMatch('+idx+')"><div class="mname">'+m.name+'</div>'+
   rw(m.a,m.sa,m.done&&m.winner===m.a)+rw(m.b,m.sb,m.done&&m.winner===m.b)+
   (ready&&!m.done?'<div class="playtag">PLAY ▶</div>':'')+
-  (m.done?(m.regA!=null?'<div class="playtag sd">⚔ SUDDEN DEATH</div>':'<div class="playtag done">DONE ✓</div>'):'')+'</div>';
+  (m.done?(m.regA!=null?'<div class="playtag sd">⚔ SUDDEN DEATH</div>':'<div class="playtag done">WON ✓</div>'):'')+'</div>';
 }
 function drawFlow(){
  if(!state||$('bracket').classList.contains('hidden'))return;
@@ -651,7 +651,7 @@ function drawFlow(){
  if(!r1done)h+=path(box(1),fin,'fl goldfaint');
  h+=path(semi,fin,state.matches[3].done?'fl solid':'fl');
  const lb=goldSrc||(!r1done?box(1):null);
- if(lb)h+='<text class="flowlbl" x="'+(lb.R+16)+'" y="'+(lb.Y-12)+'">TOP SCORER</text>';
+ if(lb)h+='<text class="flowlbl" text-anchor="middle" x="'+((lb.R+semi.L)/2)+'" y="'+(lb.Y-10)+'">TOP SCORER</text>';
  if(decBox)h+='<text class="flowlbl" x="'+(decBox.L+8)+'" y="'+(decBox.Y-56)+'" style="fill:var(--bad1)">SUDDEN DEATH ⚔</text>';
  svg.innerHTML=h;
 }
@@ -855,7 +855,7 @@ function showDeathMatch(){
  ov.innerHTML='<div class="orays red"></div><div class="obox">'+
   '<div class="olbl" style="color:var(--bad1)">⚔️ Scores level at '+m.sa+'–'+m.sb+' ⚔️</div>'+
   '<div class="onm red">DEATH MATCH</div>'+
-  '<div class="osc">Final question decides the winner</div>'+
+  '<div class="osc">Final question decides the winner!</div>'+
   '<button class="btn gold big" onclick="startDeathMatch()">Fight ⚔</button></div>';
  document.body.appendChild(ov);
 }
