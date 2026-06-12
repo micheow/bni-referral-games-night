@@ -206,6 +206,18 @@ input:focus{outline:2px solid var(--gold)}
 #seedNote .sd{color:var(--bad1)}
 .playtag.sd{background:linear-gradient(180deg,#ff8c9d,#e8344a);color:#fff}
 .toolbar{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+/* ---------- open round ---------- */
+.openbox{text-align:center;background:rgba(8,22,54,.82);border:1.5px solid rgba(245,197,66,.45);
+ border-radius:20px;padding:28px 30px;display:flex;flex-direction:column;gap:18px;align-items:center;
+ grid-column:1/-1;width:min(900px,100%);margin:0 auto;animation:slidein .45s ease}
+.openlbl{color:var(--gold);letter-spacing:2.5px;font-size:14px;text-transform:uppercase;font-weight:700}
+#modelAns{font-size:clamp(15px,1.5vw,22px);color:var(--ok1);max-width:780px;line-height:1.55}
+.chiplbl{color:var(--mut);font-size:12px;letter-spacing:2px;text-transform:uppercase}
+.chips{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.chip{width:62px;height:62px;border-radius:50%;font-size:24px;font-family:'Cinzel',Georgia,serif;font-weight:800;
+ background:linear-gradient(180deg,#234f9e,#122c63);border:1.5px solid rgba(169,194,239,.45);color:var(--txt)}
+.chip:hover{background:linear-gradient(180deg,#ffe9a8,#f5c542 48%,#e09b12);color:#231500;border-color:#ffedb6;
+ box-shadow:0 8px 24px rgba(245,197,66,.5)}
 /* ---------- winner overlay ---------- */
 #overlay{position:fixed;inset:0;background:rgba(1,4,12,.93);z-index:500;display:flex;
  align-items:center;justify-content:center;animation:fadein .4s;overflow:hidden}
@@ -273,7 +285,8 @@ input:focus{outline:2px solid var(--gold)}
   </div>
   <div id="qStatus"></div>
   <p class="note">File needs columns: <b>Question, A, B, C, D, Correct</b> (Correct = letter A&ndash;D),
-   plus an optional <b>Owner</b> column with the submitting team&rsquo;s name (must match the team names above).
+   plus optional <b>Owner</b> (submitting team&rsquo;s name, must match above) and <b>Type</b> columns.
+   Set Type to <b>Open</b> for the Final&rsquo;s open-ended round (2 per team, host scores 0&ndash;5; put a suggested answer in column A).
    Round 1 serves each team their opponent&rsquo;s questions; Semi-Final and Final draw from the whole bank
    (avoiding a team&rsquo;s own questions when possible). Template CSV is in this folder.</p>
  </div>
@@ -333,7 +346,8 @@ const LS='bni-trivia-v3', SUSPENSE_MS=2600;
 let state=null, play=null;
 function freshState(teams,questions,timer,perTeam){
  return {teams,timerSecs:timer,perTeam,questions,
-  queue:shuffle(questions.map((_,i)=>i)),
+  queue:shuffle(questions.map((_,i)=>i).filter(i=>(questions[i].type||'mcq')!=='open')),
+  openQueue:shuffle(questions.map((_,i)=>i).filter(i=>(questions[i].type||'mcq')==='open')),
   byeTeam:null,results:[],
   matches:[
    {name:'Round 1 — Match 1',a:0,b:1,sa:0,sb:0,done:false,winner:null},
@@ -348,6 +362,7 @@ function save(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}}
 function load(){try{const o=JSON.parse(localStorage.getItem(LS));
  if(o&&o.matches&&o.matches.length===5)o.matches.push({name:'Sudden Death — Bye Decider',a:null,b:null,sa:0,sb:0,done:false,winner:null});
  if(o&&o.matches&&o.matches.length===6)o.matches.push({name:'Sudden Death — Stage 1',a:null,b:null,sa:0,sb:0,done:false,winner:null});
+ if(o&&!o.openQueue)o.openQueue=[];
  return o;}catch(e){return null;}}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function $(id){return document.getElementById(id);}
@@ -431,22 +446,28 @@ function rowsToQuestions(rows){
  const col=n=>hdr.indexOf(n);
  const qi=col('question'),ai=col('a'),bi=col('b'),ci=col('c'),di=col('d'),cr=col('correct');
  let ow=col('owner');if(ow<0)ow=col('team');
+ const ty=col('type');
  if(qi<0||ai<0||bi<0||ci<0||di<0||cr<0)
-  throw new Error('Header row must contain: Question, A, B, C, D, Correct (Owner optional)');
+  throw new Error('Header row must contain: Question, A, B, C, D, Correct (Owner, Type optional)');
  const qs=[];
  for(let r=1;r<rows.length;r++){const row=rows[r].map(x=>String(x==null?'':x));
+  if(!(row[qi]||'').trim())continue;
+  const ownerName=ow>=0?(row[ow]||'').trim():'';
+  const isOpen=ty>=0&&(row[ty]||'').trim().toLowerCase().startsWith('open');
+  if(isOpen){qs.push({q:row[qi].trim(),type:'open',answer:(row[ai]||'').trim(),ownerName});continue;}
   const idx={A:0,B:1,C:2,D:3}[(row[cr]||'').trim().toUpperCase()];
-  if((row[qi]||'').trim()&&idx!==undefined)
+  if(idx!==undefined)
    qs.push({q:row[qi].trim(),a:[row[ai],row[bi],row[ci],row[di]].map(x=>(x||'').trim()),correct:idx,
-    ownerName:ow>=0?(row[ow]||'').trim():''});}
+    type:'mcq',ownerName});}
  if(!qs.length)throw new Error('No valid question rows found');
  return qs;
 }
 function handleFile(file){
  const st=$('qStatus');st.className='';st.textContent='Reading '+file.name+'…';
  const fin=qs=>{loadedQs=qs;
-  st.textContent='✅ '+qs.length+' questions loaded'+(qs.length<100?' — a full 10-per-team tournament needs ~100+':'');
-  if(qs.length<100)st.className='warn';};
+  const op=qs.filter(q=>q.type==='open').length,mc=qs.length-op;
+  st.textContent='✅ '+mc+' multiple-choice + '+op+' open-ended loaded'+(mc<100?' — a full 10-per-team tournament needs ~100+ MCQs':'');
+  if(mc<100)st.className='warn';};
  const fail=e=>{st.className='warn';st.textContent='❌ '+e.message;loadedQs=null;};
  if(/\.csv$/i.test(file.name)){
   const rd=new FileReader();
@@ -491,7 +512,12 @@ const SAMPLE=[
 ['Roughly how many times can a visitor usually attend a chapter before deciding to join?','Once','Twice','Five times','Unlimited',1],
 ['Which of these best describes a BNI chapter?','A franchise outlet','A local group of business professionals, one per category','An online forum','A co-working space',1],
 ['What should you bring plenty of to a BNI meeting?','Snacks','Business cards','Umbrellas','Invoices',1]
-].map(r=>({q:r[0],a:[r[1],r[2],r[3],r[4]],correct:r[5]}));
+].map(r=>({q:r[0],a:[r[1],r[2],r[3],r[4]],correct:r[5],type:'mcq'}));
+SAMPLE.push(
+ {q:'Open-ended: Describe your ideal referral for the next 30 days',answer:'Host judges on clarity and specificity',type:'open'},
+ {q:'Open-ended: Pitch your business in 10 seconds',answer:'Host judges on punch and memorability',type:'open'},
+ {q:'Open-ended: Name two ways to make a 1-2-1 more valuable',answer:'e.g. come with referral targets, share ideal client profile',type:'open'},
+ {q:'Open-ended: How would you invite a guest to Visitors Day?',answer:'Host judges on warmth and clarity',type:'open'});
 /* ================= SETUP ================= */
 function initSetup(){
  const tg=$('teamInputs');tg.innerHTML='';
@@ -512,7 +538,9 @@ function initSetup(){
   const qs=loadedQs.map(q=>{let owner=null;
    if(q.ownerName){const k=tmap[norm(q.ownerName)];
     if(k!==undefined)owner=k;else unmatched.add(q.ownerName);}
-   return {q:q.q,a:q.a,correct:q.correct,owner};});
+   return {q:q.q,a:q.a,correct:q.correct,owner,type:q.type||'mcq',answer:q.answer||''};});
+  const opn=qs.filter(x=>x.type==='open').length;
+  if(opn<4)alert('Note: '+opn+' open-ended question'+(opn===1?'':'s')+' loaded — the Final\u2019s open round uses 4 (2 per team). '+(opn?'It will stop early when they run out.':'The Final will be multiple-choice only.'));
   if(unmatched.size)alert('Heads up: some Owner names in the file don\u2019t match any team name and will be treated as central-bank questions:\n\n'+[...unmatched].join(', '));
   state=freshState(teams,qs,t,pt);save();renderBracket();show('bracket');});
  /* auto-load questions.csv when hosted (ignored when opened as a local file) */
@@ -650,7 +678,7 @@ function startMatch(mi){
   fi.done=false;fi.winner=null;fi.a=null;fi.b=null;state.byeTeam=null;}
  if(mi<3){wipeM(5);wipeM(6);}
  if(mi===6)wipeM(5);
- play={mi,asked:[0,0],quota:mi>=5?1:(state.perTeam||10),qIdx:null,phase:'idle',turn:0,hist:[[],[]]};
+ play={mi,asked:[0,0],openAsked:[0,0],quota:mi>=5?1:(state.perTeam||10),qIdx:null,phase:'idle',turn:0,hist:[[],[]]};
  $('matchLabel').textContent=m.name;
  show('game');nextQuestion();
 }
@@ -663,7 +691,8 @@ function updatePanels(){
   if(String(sc)!==scEl.textContent&&scEl.textContent!==''){
    scEl.classList.remove('pop');void scEl.offsetWidth;scEl.classList.add('pop');}
   scEl.textContent=sc;
-  let dh='';for(let i=0;i<play.quota;i++){
+  const totDots=play.quota+(play.mi===4?2:0);
+  let dh='';for(let i=0;i<totDots;i++){
    const r=play.hist[side][i];
    dh+='<span class="dot'+(r===true?' ok':r===false?' bad':'')+'"></span>';}
   p.querySelector('.dots').innerHTML=dh;
@@ -685,6 +714,9 @@ function drawQuestion(){
 function nextQuestion(){
  const m=state.matches[play.mi];
  if(play.asked[0]>=play.quota&&play.asked[1]>=play.quota){
+  const oq=play.mi===4?2:0;
+  if(oq&&(play.openAsked[0]<oq||play.openAsked[1]<oq)&&state.openQueue.length)
+   return nextOpenQuestion();
   if(m.sa===m.sb)return showDeathMatch();
   return endMatch();
  }
@@ -699,7 +731,7 @@ function nextQuestion(){
  const qOwner=state.questions[play.qIdx].owner;
  $('turnBanner').innerHTML='🎯 <b style="color:'+accent+'">'+esc(teamOf(turn))+'</b> — '+
   (qOwner!=null&&qOwner!==(turn===0?state.matches[play.mi].a:state.matches[play.mi].b)?'a question from <b>'+esc(state.teams[qOwner])+'</b>':'your question');
- $('qNum').textContent='Question '+(play.asked[0]+play.asked[1]+1)+' of '+(play.quota*2);
+ $('qNum').textContent='Question '+(play.asked[0]+play.asked[1]+1)+' of '+(play.quota*2+(play.mi===4?4:0));
  const qw=$('qWrap');qw.style.animation='none';qw.classList.remove('sweep');void qw.offsetWidth;
  qw.style.animation='slidein .4s ease';qw.classList.add('sweep');
  $('qText').textContent=q.q;
@@ -747,8 +779,50 @@ function reveal(i){
  $('nextBtn').classList.remove('hidden');$('skipBtn').classList.add('hidden');
  updatePanels();save();
 }
+function nextOpenQuestion(){
+ let turn=(play.openAsked[0]+play.openAsked[1])%2;
+ if(play.openAsked[turn]>=2)turn=1-turn;
+ play.turn=turn;play.phase='openq';
+ const m=state.matches[play.mi],answering=turn===0?m.a:m.b;
+ let pick=state.openQueue.findIndex(i=>state.questions[i].owner!==answering);
+ if(pick<0)pick=0;
+ play.qIdx=state.openQueue.splice(pick,1)[0];
+ const q=state.questions[play.qIdx];
+ const accent=turn===0?'#f5c542':'#4dd7ff';
+ snd('intro');
+ $('turnBanner').innerHTML='🎤 <b style="color:'+accent+'">'+esc(teamOf(turn))+'</b> — open-ended question '+(play.openAsked[turn]+1)+' of 2';
+ $('qNum').textContent='Open round — host awards the points';
+ const qw=$('qWrap');qw.style.animation='none';qw.classList.remove('sweep');void qw.offsetWidth;
+ qw.style.animation='slidein .4s ease';qw.classList.add('sweep');
+ $('qText').textContent=q.q;
+ $('answers').innerHTML='<div class="openbox">'+
+  '<div class="openlbl">🎤 Open-ended — team answers aloud, host awards points</div>'+
+  (q.answer?'<button class="btn ghost" id="revealBtn">Reveal suggested answer</button><div id="modelAns" class="hidden"></div>':'')+
+  '<div class="chiplbl">Award points (keys 0–5)</div>'+
+  '<div class="chips">'+[0,1,2,3,4,5].map(p=>'<button class="chip" onclick="awardOpen('+p+')">'+p+'</button>').join('')+'</div></div>';
+ if(q.answer){$('modelAns').textContent=q.answer;
+  $('revealBtn').addEventListener('click',()=>{$('modelAns').classList.remove('hidden');$('revealBtn').classList.add('hidden');});}
+ $('nextBtn').classList.add('hidden');$('skipBtn').classList.remove('hidden');
+ updatePanels();startTimer(state.timerSecs*2);save();
+}
+function awardOpen(p){
+ if(!play||play.phase!=='openq')return;
+ stopTimer();
+ const m=state.matches[play.mi];
+ if(play.turn===0)m.sa+=p;else m.sb+=p;
+ play.hist[play.turn][play.quota+play.openAsked[play.turn]]=p>0;
+ play.openAsked[play.turn]++;
+ play.phase='revealed';
+ if(p>0){snd('correct');burst(110+p*40);}else snd('wrong');
+ $('turnBanner').innerHTML='⭐ <b>'+p+' point'+(p===1?'':'s')+'</b> to '+esc(teamOf(play.turn));
+ $('nextBtn').classList.remove('hidden');$('skipBtn').classList.add('hidden');
+ updatePanels();save();
+}
 function skipQ(){
- if(!play||play.phase!=='open')return;
+ if(!play)return;
+ if(play.phase==='openq'){stopTimer();snd('skip');state.openQueue.push(play.qIdx);
+  $('turnBanner').innerHTML='⏭ Skipped — returned to the pool';setTimeout(nextQuestion,450);return;}
+ if(play.phase!=='open')return;
  stopTimer();snd('skip');
  state.queue.push(play.qIdx);
  $('turnBanner').innerHTML='⏭ Skipped — question returned to the pool';
@@ -773,18 +847,21 @@ function startDeathMatch(){
  nextQuestion();
 }
 /* ================= TIMER ================= */
-let timerInt=null,tLeft=0;
-function startTimer(){
- stopTimer();tLeft=state.timerSecs;renderTimer();
+let timerInt=null,tLeft=0,timerBase=30;
+function startTimer(secs){
+ stopTimer();timerBase=secs||state.timerSecs;tLeft=timerBase;renderTimer();
  timerInt=setInterval(()=>{tLeft--;renderTimer();
   if(tLeft<=5&&tLeft>0)snd('tick');
-  if(tLeft<=0){stopTimer();lockAnswer(-1);}},1000);
+  if(tLeft<=0){stopTimer();
+   if(play&&play.phase==='openq'){snd('timeup');
+    $('turnBanner').innerHTML='⏰ <b>Time!</b> Host — award the points';}
+   else lockAnswer(-1);}},1000);
 }
 function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}}
 function renderTimer(){
  const c=$('clock');
  $('timerText').textContent=tLeft;
- c.style.setProperty('--p',(tLeft/state.timerSecs*100));
+ c.style.setProperty('--p',(tLeft/timerBase*100));
  c.classList.toggle('low',tLeft<=5);
 }
 /* ================= MATCH END ================= */
@@ -836,7 +913,8 @@ $('resetBtn').addEventListener('click',()=>{
   localStorage.removeItem(LS);location.reload();}});
 document.addEventListener('keydown',e=>{
  if($('game').classList.contains('hidden')||!play)return;
- if(e.key>='1'&&e.key<='4'&&play.phase==='open')lockAnswer(+e.key-1);
+ if(play.phase==='openq'&&e.key>='0'&&e.key<='5')awardOpen(+e.key);
+ else if(e.key>='1'&&e.key<='4'&&play.phase==='open')lockAnswer(+e.key-1);
  else if((e.key==='s'||e.key==='S')&&play.phase==='open')skipQ();
  else if((e.key==='n'||e.key==='N'||e.key===' ')&&play.phase==='revealed'){e.preventDefault();nextQuestion();}});
 addEventListener('resize',()=>requestAnimationFrame(drawFlow));
