@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#01040c">
 <script>
 /* On phones/small touch screens, render the full desktop layout and let the
    browser zoom it to fit. The viewport WIDTH is derived from the device's
@@ -49,9 +50,12 @@
  --lock1:#ffb84d;--lock2:#e07b00;--ok1:#2fe57e;--ok2:#0a9648;--bad1:#ff5468;--bad2:#b3122c;
  --txt:#f6f8ff;--mut:#8fa3d4}
 html,body{height:100%}
+/* Dark base so the iPhone safe-area insets (notch/rounded corners in
+   landscape) never show the browser's white canvas */
+html{background:#01040c}
 body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--txt);overflow-x:hidden;
  background:radial-gradient(ellipse 120% 85% at 50% 22%,#14387e 0%,#081a44 42%,#030a1f 78%,#01040c 100%);
- background-attachment:fixed;min-height:100vh}
+ background-attachment:fixed;background-color:#01040c;min-height:100vh}
 #rays{position:fixed;inset:-60%;pointer-events:none;z-index:0;opacity:.8;
  background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(96,150,255,.055) 0 5deg,transparent 5deg 17deg);
  animation:spin 90s linear infinite}
