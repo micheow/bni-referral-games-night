@@ -741,7 +741,7 @@ function startMatch(mi){
   fi.done=false;fi.winner=null;fi.a=null;fi.b=null;state.byeTeam=null;}
  if(mi<3){wipeM(5);wipeM(6);}
  if(mi===6)wipeM(5);
- play={mi,asked:[0,0],openAsked:[0,0],quota:mi>=5?1:(state.perTeam||10),qIdx:null,phase:'idle',turn:0,hist:[[],[]]};
+ play={mi,asked:[0,0],openAsked:[0,0],quota:mi>=5?1:(state.perTeam||10),qIdx:null,phase:'idle',turn:0,hist:[[],[]],histO:[[],[]]};
  $('matchLabel').textContent=m.name;
  show('game');nextQuestion();
 }
@@ -754,10 +754,9 @@ function updatePanels(){
   if(String(sc)!==scEl.textContent&&scEl.textContent!==''){
    scEl.classList.remove('pop');void scEl.offsetWidth;scEl.classList.add('pop');}
   scEl.textContent=sc;
-  const totDots=play.quota+(play.mi===4?2:0);
-  let dh='';for(let i=0;i<totDots;i++){
-   const r=play.hist[side][i];
-   dh+='<span class="dot'+(r===true?' ok':r===false?' bad':'')+'"></span>';}
+  const dot=r=>'<span class="dot'+(r===true?' ok':r===false?' bad':'')+'"></span>';
+  let dh='';for(let i=0;i<play.quota;i++)dh+=dot(play.hist[side][i]);
+  if(play.mi===4)for(let i=0;i<2;i++)dh+=dot(play.histO[side][i]);
   p.querySelector('.dots').innerHTML=dh;
   p.classList.toggle('active',play.turn===side);});
 }
@@ -821,9 +820,9 @@ function lockAnswer(i){
  if(i>=0){$('ans'+i).classList.add('locked');
   $('turnBanner').innerHTML='🔒 <b>'+esc(teamOf(play.turn))+'</b> locks in… is that the final answer?';
   snd('lockin');suspense(SUSPENSE_MS);
-  setTimeout(()=>reveal(i),SUSPENSE_MS);}
+  const tok=play;setTimeout(()=>{if(play===tok)reveal(i);},SUSPENSE_MS);}
  else{ $('turnBanner').innerHTML='⏰ <b>Time\'s up!</b>';snd('timeup');
-  setTimeout(()=>reveal(-1),900);}
+  const tok=play;setTimeout(()=>{if(play===tok)reveal(-1);},900);}
 }
 function reveal(i){
  if(!play)return;
@@ -880,7 +879,7 @@ function awardOpen(p){
  stopTimer();
  const m=state.matches[play.mi];
  if(play.turn===0)m.sa+=p;else m.sb+=p;
- play.hist[play.turn][play.quota+play.openAsked[play.turn]]=p>0;
+ play.histO[play.turn][play.openAsked[play.turn]]=p>0;
  play.openAsked[play.turn]++;
  play.phase='revealed';
  play.last={kind:'open',turn:play.turn,qIdx:play.qIdx,delta:p};
@@ -892,13 +891,15 @@ function awardOpen(p){
 }
 function skipQ(){
  if(!play)return;
- if(play.phase==='openq'){stopTimer();snd('skip');state.openQueue.push(play.qIdx);
-  $('turnBanner').innerHTML='⏭ Skipped. Returned to the pool';setTimeout(nextQuestion,450);return;}
+ if(play.phase==='openq'){play.phase='skipping';stopTimer();snd('skip');
+  state.openQueue.push(play.qIdx);
+  $('turnBanner').innerHTML='⏭ Skipped. Returned to the pool';
+  const tok=play;setTimeout(()=>{if(play===tok)nextQuestion();},450);return;}
  if(play.phase!=='open')return;
- stopTimer();snd('skip');
+ play.phase='skipping';stopTimer();snd('skip');
  state.queue.push(play.qIdx);
  $('turnBanner').innerHTML='⏭ Skipped. Question returned to the pool';
- setTimeout(nextQuestion,450);
+ const tok=play;setTimeout(()=>{if(play===tok)nextQuestion();},450);
 }
 function showDeathMatch(){
  if($('overlay'))return;
@@ -934,13 +935,13 @@ function undoLast(){
   state.queue.unshift(L.qIdx);
  }else{
   play.openAsked[L.turn]--;
-  play.hist[L.turn][play.quota+play.openAsked[L.turn]]=undefined;
+  play.histO[L.turn][play.openAsked[L.turn]]=undefined;
   state.openQueue.unshift(L.qIdx);
  }
- play.last=null;snd('skip');
+ play.last=null;play.phase='undoing';snd('skip');
  $('turnBanner').innerHTML='↩ Undone. Same question coming back';
  updatePanels();save();
- setTimeout(nextQuestion,400);
+ const tok=play;setTimeout(()=>{if(play===tok)nextQuestion();},400);
 }
 /* ================= TIMER ================= */
 let timerInt=null,tLeft=0,timerBase=30;
