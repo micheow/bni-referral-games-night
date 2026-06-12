@@ -592,7 +592,8 @@ function initSetup(){
   const st=$('qStatus');st.className='';
   st.textContent='✅ '+SAMPLE.length+' sample questions loaded, enough for a 5-per-team test match';});
  $('startBtn').addEventListener('click',()=>{
-  if(!loadedQs){alert('Load a question file (or the samples) first.');return;}
+  if(!loadedQs){loadedQs=SAMPLE.slice();
+   $('qStatus').textContent='✅ No file loaded, using the '+SAMPLE.length+' built-in sample questions';}
   const teams=[];for(let i=0;i<6;i++)teams.push(($('team'+i).value||'').trim()||'Team '+(i+1));
   const t=Math.max(5,Math.min(120,parseInt($('timerSecs').value)||30));
   const pt=Math.max(1,Math.min(50,parseInt($('perTeam').value)||5));
