@@ -53,13 +53,13 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--txt);
  background:linear-gradient(100deg,transparent,rgba(255,255,255,.15),transparent);
  animation:sweep 1.15s ease .2s forwards}
 @keyframes sweep{to{transform:translateX(480%)}}
-#qWrap .hi{justify-content:center;text-align:center;min-height:128px;
+#qWrap .hi{justify-content:center;text-align:center;height:clamp(130px,18vh,210px);
  padding:clamp(20px,2.4vw,40px) 56px;font-size:clamp(22px,2.45vw,40px);font-weight:700;line-height:1.32}
 .answers{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:20px 34px;width:min(1240px,96%);margin:0 auto}
 .ans{cursor:pointer;transition:transform .15s;display:flex}
 .ans .hx{width:100%;display:flex}
-.ans .hi{padding:clamp(14px,1.6vw,24px) 34px;font-size:clamp(17px,1.8vw,28px);font-weight:600;min-height:74px;
- transition:filter .2s}
+.ans .hi{padding:clamp(10px,1.2vw,18px) 34px;font-size:clamp(17px,1.8vw,28px);font-weight:600;height:clamp(70px,10vh,108px);
+ overflow:hidden;transition:filter .2s}
 .ans:hover:not(.dead) .hi{background:linear-gradient(180deg,#1c4aa8 0%,#123270 48%,#081d4a 52%,#0d2a60 100%)}
 .ans:hover:not(.dead){transform:scale(1.015)}
 .ans .ltr{color:var(--gold);font-weight:900;font-size:1.05em;min-width:34px;font-family:Georgia,serif}
@@ -259,8 +259,8 @@ input:focus{outline:2px solid var(--gold)}
  .gctrl{gap:10px}
  .tp{padding:10px 14px}
  #qWrap{margin:18px auto 14px}
- #qWrap .hi{padding:18px 30px;font-size:21px;font-weight:800;min-height:96px}
- .ans .hi{padding:11px 20px;font-size:15.5px;min-height:0;gap:10px}
+ #qWrap .hi{padding:14px 26px;font-size:21px;font-weight:800;height:120px}
+ .ans .hi{padding:8px 18px;font-size:15.5px;height:62px;gap:10px}
  .hex .hx{clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,14px 100%,0 50%)}
  .hex .hi{clip-path:polygon(13px 0,calc(100% - 13px) 0,100% 50%,calc(100% - 13px) 100%,13px 100%,0 50%)}
  .obox{padding:24px 18px}
@@ -369,6 +369,12 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 function $(id){return document.getElementById(id);}
 function show(id){['setup','bracket','game'].forEach(s=>$(s).classList.toggle('hidden',s!==id));}
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function fitText(el,min){
+ el.style.fontSize='';
+ let f=parseFloat(getComputedStyle(el).fontSize)||20,guard=60;
+ el.style.fontSize=f+'px';
+ while(guard-->0&&f>min&&el.scrollHeight-el.clientHeight>2){f-=1;el.style.fontSize=f+'px';}
+}
 /* ================= AUDIO ENGINE ================= */
 let AC=null;
 function ac(){AC=AC||new (window.AudioContext||window.webkitAudioContext)();
@@ -760,6 +766,8 @@ function nextQuestion(){
   d.addEventListener('click',()=>lockAnswer(i));an.appendChild(d);});
  $('nextBtn').classList.add('hidden');$('skipBtn').classList.remove('hidden');
  $('undoBtn').classList.add('hidden');play.last=null;
+ fitText($('qText'),15);
+ document.querySelectorAll('.ans .hi').forEach(el=>fitText(el,12));
  updatePanels();startTimer();save();
 }
 /* --- two-stage WWTBAM reveal: lock in → suspense → reveal --- */
@@ -823,6 +831,7 @@ function nextOpenQuestion(){
   $('revealBtn').addEventListener('click',()=>{$('modelAns').classList.remove('hidden');$('revealBtn').classList.add('hidden');});}
  $('nextBtn').classList.add('hidden');$('skipBtn').classList.remove('hidden');
  $('undoBtn').classList.add('hidden');play.last=null;
+ fitText($('qText'),15);
  updatePanels();startTimer(state.timerSecs*2);save();
 }
 function awardOpen(p){
