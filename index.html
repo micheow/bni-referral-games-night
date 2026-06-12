@@ -651,7 +651,7 @@ function drawFlow(){
  if(!r1done)h+=path(box(1),fin,'fl goldfaint');
  h+=path(semi,fin,state.matches[3].done?'fl solid':'fl');
  const lb=goldSrc||(!r1done?box(1):null);
- if(lb)h+='<text class="flowlbl" text-anchor="middle" x="'+((lb.R+semi.L)/2)+'" y="'+(lb.Y-10)+'">TOP SCORER</text>';
+ if(lb)h+='<text class="flowlbl" text-anchor="middle" x="'+((semi.R+fin.L)/2)+'" y="'+(fin.Y-12)+'">TOP SCORER</text>';
  if(decBox)h+='<text class="flowlbl" x="'+(decBox.L+8)+'" y="'+(decBox.Y-56)+'" style="fill:var(--bad1)">SUDDEN DEATH ⚔</text>';
  svg.innerHTML=h;
 }
