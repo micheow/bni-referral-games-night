@@ -9,16 +9,32 @@
    landscape aspect ratio so the visible HEIGHT lands around a desktop's
    (~860px) — otherwise a wide phone shows a short slice and content bleeds
    downward. Same proportions as desktop; best viewed in landscape. */
-(function(){try{
- var coarse=matchMedia('(pointer:coarse)').matches;
- var lo=Math.min(screen.width,screen.height),hi=Math.max(screen.width,screen.height);
- if(coarse&&lo<=820){
-  var aspect=hi/lo;                              /* landscape aspect of the device */
-  var w=Math.max(1150,Math.min(1900,Math.round(860*aspect)));
-  var vp=document.querySelector('meta[name=viewport]');
-  if(vp)vp.setAttribute('content','width='+w+', viewport-fit=cover');
+(function(){
+ function isTouch(){
+  try{
+   return (matchMedia&&matchMedia('(pointer:coarse)').matches)
+    || (navigator.maxTouchPoints||0)>0
+    || ('ontouchstart' in window);
+  }catch(e){return 'ontouchstart' in window;}
  }
-}catch(e){}})();
+ function fit(){
+  try{
+   /* short side of the physical screen (orientation-independent) */
+   var lo=Math.min(screen.width,screen.height),hi=Math.max(screen.width,screen.height);
+   var vp=document.querySelector('meta[name=viewport]');
+   if(!vp)return;
+   if(isTouch()&&lo<=820&&hi>lo){            /* phones & small tablets */
+    var aspect=hi/lo;                        /* landscape aspect of the device */
+    var w=Math.max(1150,Math.min(1900,Math.round(860*aspect)));
+    var c='width='+w+', viewport-fit=cover';
+    if(vp.getAttribute('content')!==c)vp.setAttribute('content',c);
+   }
+  }catch(e){}
+ }
+ fit();
+ addEventListener('orientationchange',fit);
+ addEventListener('resize',fit);
+})();
 </script>
 <title>BNI Referral Games Night</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
