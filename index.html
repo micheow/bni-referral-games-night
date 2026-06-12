@@ -356,13 +356,13 @@ function freshState(teams,questions,timer,perTeam){
    {name:'Round 1 · Match 3',a:4,b:5,sa:0,sb:0,done:false,winner:null},
    {name:'Semi-Final',a:null,b:null,sa:0,sb:0,done:false,winner:null},
    {name:'Final',a:null,b:null,sa:0,sb:0,done:false,winner:null},
-   {name:'Sudden Death · Bye Decider',a:null,b:null,sa:0,sb:0,done:false,winner:null},
-   {name:'Sudden Death · Stage 1',a:null,b:null,sa:0,sb:0,done:false,winner:null}]};
+   {name:'Sudden Death',a:null,b:null,sa:0,sb:0,done:false,winner:null},
+   {name:'Sudden Death 1',a:null,b:null,sa:0,sb:0,done:false,winner:null}]};
 }
 function save(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}}
 function load(){try{const o=JSON.parse(localStorage.getItem(LS));
- if(o&&o.matches&&o.matches.length===5)o.matches.push({name:'Sudden Death · Bye Decider',a:null,b:null,sa:0,sb:0,done:false,winner:null});
- if(o&&o.matches&&o.matches.length===6)o.matches.push({name:'Sudden Death · Stage 1',a:null,b:null,sa:0,sb:0,done:false,winner:null});
+ if(o&&o.matches&&o.matches.length===5)o.matches.push({name:'Sudden Death',a:null,b:null,sa:0,sb:0,done:false,winner:null});
+ if(o&&o.matches&&o.matches.length===6)o.matches.push({name:'Sudden Death 1',a:null,b:null,sa:0,sb:0,done:false,winner:null});
  if(o&&!o.openQueue)o.openQueue=[];
  return o;}catch(e){return null;}}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -593,7 +593,7 @@ function initSetup(){
 function updateBracketLogic(){
  const sf=[state.matches[0],state.matches[1],state.matches[2]];
  const dec=state.matches[5],duel=state.matches[6];
- const wipe=m=>{m.a=null;m.b=null;m.sa=0;m.sb=0;m.done=false;m.winner=null;};
+ const wipe=m=>{m.a=null;m.b=null;m.sa=0;m.sb=0;m.done=false;m.winner=null;};dec.name='Sudden Death';
  if(!sf.every(m=>m.done)){wipe(dec);wipe(duel);return;}
  /* regulation score & margin: sudden-death points never count toward bye ranking */
  const winners=sf.map(m=>{
@@ -605,10 +605,10 @@ function updateBracketLogic(){
   if(eq(winners[0],winners[1])&&eq(winners[1],winners[2])){ /* 3-way tie -> step ladder */
    if(!duel.done){if(duel.a==null){const p=shuffle(winners.map(w=>w.team));
      duel.a=p[0];duel.b=p[1];duel.third=p[2];}return;}
-   if(!dec.done){if(dec.a==null){dec.a=duel.winner;dec.b=duel.third;}return;}
+   if(!dec.done){if(dec.a==null){dec.a=duel.winner;dec.b=duel.third;dec.name='Sudden Death 2';}return;}
    state.byeTeam=dec.winner;
   }else if(eq(winners[0],winners[1])){ /* 2-way tie -> sudden death */
-   if(!dec.done){if(dec.a==null){dec.a=winners[0].team;dec.b=winners[1].team;}return;}
+   if(!dec.done){if(dec.a==null){dec.a=winners[0].team;dec.b=winners[1].team;dec.name='Sudden Death';}return;}
    state.byeTeam=dec.winner;
   }else state.byeTeam=winners[0].team;
  }
