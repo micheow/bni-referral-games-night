@@ -671,10 +671,10 @@ function renderBracket(){
    return {name:state.teams[x.winner],sd,score:sd?x.regA:Math.max(x.sa,x.sb),
     margin:sd?0:Math.abs(x.sa-x.sb),bye:x.winner===state.byeTeam};})
    .sort((x,y)=>y.score-x.score||y.margin-x.margin);
-  sn.innerHTML='<b>Seeding — regulation results only (sudden-death points don\u2019t count):</b><br>'+
+  sn.innerHTML='<b>Who takes the fast-track to the Final?</b> Ranked on the main questions only — sudden death decides who advances, not the ranking.<br>'+
    rows.map((r,i)=>(i+1)+'. '+esc(r.name)+(r.bye?' 👑':'')+' — '+
-    (r.sd?'<span class="sd">drew '+r.score+'–'+r.score+', advanced on sudden death</span>'
-     :r.score+' pts, won by '+r.margin)).join(' &nbsp;·&nbsp; ');
+    (r.sd?'<span class="sd">tied '+r.score+'–'+r.score+', won on sudden death</span>'
+     :'won '+r.score+'–'+(r.score-r.margin))).join(' &nbsp;·&nbsp; ');
  }else sn.innerHTML='';
  $('poolBtn').textContent='🗂 '+state.queue.length+' questions left in pool';
  save();
