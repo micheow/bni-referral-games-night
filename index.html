@@ -80,24 +80,22 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--txt);
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
 /* ---------- top bar / team panels ---------- */
 .topbar{display:grid;grid-template-columns:1fr auto 1fr;gap:26px;align-items:center;margin-top:6px}
-#pA{--acc:#f5c542;--accGlow:rgba(245,197,66,.5);transform:skewX(-7deg)}
-#pB{--acc:#4dd7ff;--accGlow:rgba(77,215,255,.5);transform:skewX(7deg)}
+#pA{--acc:#f5c542;--accGlow:rgba(245,197,66,.5)}
+#pB{--acc:#4dd7ff;--accGlow:rgba(77,215,255,.5)}
 .tp{transition:all .3s;opacity:.55;position:relative;text-align:center;
- background:linear-gradient(180deg,rgba(18,44,100,.92),rgba(5,15,40,.96));
- border:1.6px solid rgba(169,194,239,.25);border-radius:8px;padding:14px 30px 12px;overflow:hidden}
-.tp::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;
- background:linear-gradient(90deg,transparent,var(--acc),transparent)}
-.tp>*{transform:skewX(7deg)}
-#pB>*{transform:skewX(-7deg)}
-.tp .tname{font-size:clamp(15px,1.5vw,24px);font-weight:800;letter-spacing:.5px}
-.tp .tscore{font-size:clamp(30px,3.4vw,54px);font-weight:800;line-height:1.05;font-family:'Cinzel',Georgia,serif;
- color:var(--acc);text-shadow:0 0 22px var(--accGlow)}
-.tp .tscore.pop{animation:spop .55s ease}
-@keyframes spop{35%{transform:skewX(7deg) scale(1.5)}}
-#pB .tscore.pop{animation:spopB .55s ease}
-@keyframes spopB{35%{transform:skewX(-7deg) scale(1.5)}}
-#pA.active{opacity:1;border-color:var(--acc);box-shadow:0 0 32px var(--accGlow);transform:skewX(-7deg) scale(1.05)}
-#pB.active{opacity:1;border-color:var(--acc);box-shadow:0 0 32px var(--accGlow);transform:skewX(7deg) scale(1.05)}
+ background:linear-gradient(160deg,rgba(24,54,118,.92) 0%,rgba(8,20,52,.96) 55%,rgba(4,11,30,.98) 100%);
+ border:1.5px solid rgba(169,194,239,.22);border-radius:16px;padding:16px 28px 13px;overflow:hidden}
+.tp::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
+ background:linear-gradient(90deg,transparent 8%,var(--acc) 50%,transparent 92%)}
+.tp::after{content:'';position:absolute;inset:0;pointer-events:none;
+ background:linear-gradient(115deg,rgba(255,255,255,.08),transparent 42%)}
+.tp .tname{font-size:clamp(14px,1.4vw,22px);font-weight:800;letter-spacing:2.5px;text-transform:uppercase}
+.tp .tscore{font-size:clamp(32px,3.6vw,58px);font-weight:800;line-height:1.08;font-family:'Cinzel',Georgia,serif;
+ color:var(--acc);text-shadow:0 0 24px var(--accGlow)}
+.tp .tscore.pop{animation:spop .55s ease;display:inline-block}
+@keyframes spop{35%{transform:scale(1.5)}}
+.tp.active{opacity:1;border-color:var(--acc);transform:translateY(-3px) scale(1.03);
+ box-shadow:0 0 36px var(--accGlow),inset 0 0 30px rgba(255,255,255,.04)}
 #qNum{color:var(--mut);font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:8px}
 .dots{display:flex;gap:7px;justify-content:center;margin-top:3px}
 .dot{width:11px;height:11px;border-radius:50%;border:1.6px solid var(--silver);opacity:.5}
@@ -219,6 +217,13 @@ input:focus{outline:2px solid var(--gold)}
  animation:shine 2.6s linear infinite;filter:drop-shadow(0 6px 26px rgba(245,197,66,.45))}
 @keyframes shine{from{background-position:200% 0}to{background-position:-20% 0}}
 .obox .osc{font-size:clamp(20px,2.2vw,34px);color:var(--mut);margin-bottom:32px}
+.oscore{display:flex;align-items:flex-start;justify-content:center;gap:clamp(20px,3vw,44px);margin:6px 0 34px}
+.oscore .onmS{font-size:clamp(13px,1.3vw,18px);letter-spacing:2.5px;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+.oscore .onum{font-family:'Cinzel',Georgia,serif;font-size:clamp(44px,5.5vw,80px);font-weight:800;line-height:1;color:var(--txt)}
+.oscore .win .onum{color:var(--gold);text-shadow:0 0 28px rgba(245,197,66,.55)}
+.oscore .win .onmS{color:var(--gold)}
+.oscore .lose{opacity:.55}
+.oscore .odash{font-size:clamp(28px,3vw,44px);color:var(--mut);align-self:center}
 .obox .onm.red{background:linear-gradient(110deg,#ffd9e2 20%,#ff5468 40%,#ffe6eb 50%,#ff5468 60%,#b3122c 80%);
  background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
  filter:drop-shadow(0 6px 30px rgba(255,84,104,.55));animation:shine 1.6s linear infinite,deathshake 2.8s ease-in-out infinite}
@@ -781,10 +786,13 @@ function endMatch(forced){
  snd('fanfare');burst(340,true);setTimeout(()=>burst(240,true),550);
  const ov=document.createElement('div');ov.id='overlay';
  const isFinal=play.mi===4;
+ const wn=m.winner,ln=wn===m.a?m.b:m.a,ws=wn===m.a?m.sa:m.sb,lsc=wn===m.a?m.sb:m.sa;
  ov.innerHTML='<div class="orays"></div><div class="obox">'+
   '<div class="olbl">'+(isFinal?'🏆 Tournament Champion 🏆':play.mi===5?'⚡ Straight to the Final ⚡':play.mi===6?'⚔ Survives — one more duel for the Final spot':'Winner — '+esc(m.name))+'</div>'+
   '<div class="onm">'+esc(state.teams[m.winner])+'</div>'+
-  '<div class="osc">'+esc(state.teams[m.a])+' '+m.sa+' — '+m.sb+' '+esc(state.teams[m.b])+'</div>'+
+  '<div class="oscore"><div class="oside win"><div class="onmS">'+esc(state.teams[wn])+'</div><div class="onum">'+ws+'</div></div>'+
+  '<div class="odash">—</div>'+
+  '<div class="oside lose"><div class="onmS">'+esc(state.teams[ln])+'</div><div class="onum">'+lsc+'</div></div></div>'+
   '<button class="btn gold big" onclick="closeOverlay()">Back to bracket →</button></div>';
  document.body.appendChild(ov);
  if(isFinal){let k=0;const iv=setInterval(()=>{burst(200,true);if(++k>5)clearInterval(iv);},900);}
