@@ -286,7 +286,7 @@ input:focus{outline:2px solid var(--gold)}
  <div class="bracketwrap">
   <div class="round"><div class="roundtitle">Round 1</div>
    <div id="m0"></div><div id="m1"></div><div id="m2"></div></div>
-  <div class="round"><div class="roundtitle">Semi-Final</div><div id="m5" class="hidden"></div><div id="m3"></div></div>
+  <div class="round"><div class="roundtitle">Semi-Final</div><div id="m6" class="hidden"></div><div id="m5" class="hidden"></div><div id="m3"></div></div>
   <div class="round"><div class="roundtitle">Final</div><div id="m4"></div></div>
  </div>
  <div class="toolbar">
@@ -331,11 +331,13 @@ function freshState(teams,questions,timer,perTeam){
    {name:'Round 1 — Match 3',a:4,b:5,sa:0,sb:0,done:false,winner:null},
    {name:'Semi-Final',a:null,b:null,sa:0,sb:0,done:false,winner:null},
    {name:'Final',a:null,b:null,sa:0,sb:0,done:false,winner:null},
-   {name:'Sudden Death — Bye Decider',a:null,b:null,sa:0,sb:0,done:false,winner:null}]};
+   {name:'Sudden Death — Bye Decider',a:null,b:null,sa:0,sb:0,done:false,winner:null},
+   {name:'Sudden Death — Stage 1',a:null,b:null,sa:0,sb:0,done:false,winner:null}]};
 }
 function save(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}}
 function load(){try{const o=JSON.parse(localStorage.getItem(LS));
  if(o&&o.matches&&o.matches.length===5)o.matches.push({name:'Sudden Death — Bye Decider',a:null,b:null,sa:0,sb:0,done:false,winner:null});
+ if(o&&o.matches&&o.matches.length===6)o.matches.push({name:'Sudden Death — Stage 1',a:null,b:null,sa:0,sb:0,done:false,winner:null});
  return o;}catch(e){return null;}}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function $(id){return document.getElementById(id);}
@@ -519,12 +521,22 @@ function initSetup(){
 /* ================= BRACKET ================= */
 function updateBracketLogic(){
  const sf=[state.matches[0],state.matches[1],state.matches[2]];
- const dec=state.matches[5];
- if(!sf.every(m=>m.done)){dec.a=null;dec.b=null;dec.done=false;dec.winner=null;return;}
- const winners=sf.map(m=>({team:m.winner,score:Math.max(m.sa,m.sb)}))
-  .sort((x,y)=>y.score-x.score);
+ const dec=state.matches[5],duel=state.matches[6];
+ const wipe=m=>{m.a=null;m.b=null;m.sa=0;m.sb=0;m.done=false;m.winner=null;};
+ if(!sf.every(m=>m.done)){wipe(dec);wipe(duel);return;}
+ /* regulation score & margin: sudden-death points never count toward bye ranking */
+ const winners=sf.map(m=>{
+  const reg=m.regA!=null; /* match went to a death match -> regulation was a draw */
+  return {team:m.winner,score:reg?m.regA:Math.max(m.sa,m.sb),margin:reg?0:Math.abs(m.sa-m.sb)};
+ }).sort((x,y)=>y.score-x.score||y.margin-x.margin);
+ const eq=(a,b)=>a.score===b.score&&a.margin===b.margin;
  if(state.byeTeam==null){
-  if(winners[0].score===winners[1].score){ /* tie for top scorer -> sudden-death bye decider */
+  if(eq(winners[0],winners[1])&&eq(winners[1],winners[2])){ /* 3-way tie -> step ladder */
+   if(!duel.done){if(duel.a==null){const p=shuffle(winners.map(w=>w.team));
+     duel.a=p[0];duel.b=p[1];duel.third=p[2];}return;}
+   if(!dec.done){if(dec.a==null){dec.a=duel.winner;dec.b=duel.third;}return;}
+   state.byeTeam=dec.winner;
+  }else if(eq(winners[0],winners[1])){ /* 2-way tie -> sudden death */
    if(!dec.done){if(dec.a==null){dec.a=winners[0].team;dec.b=winners[1].team;}return;}
    state.byeTeam=dec.winner;
   }else state.byeTeam=winners[0].team;
@@ -564,14 +576,19 @@ function drawFlow(){
  const r1done=sf.every(m=>m.done);
  const semi=box(3),fin=box(4);
  if(semi.L<=box(0).R+12||fin.L<=semi.R-1){svg.innerHTML='';return;} /* columns wrapped -> no lines */
+ const duel=state.matches[6];
  const decBox=dec&&dec.a!=null&&!$('m5').classList.contains('hidden')?box(5):null;
+ const duelBox=duel&&duel.a!=null&&!$('m6').classList.contains('hidden')?box(6):null;
  let h='',goldSrc=null;
  for(let i=0;i<3;i++){
   const b=box(i),w=sf[i].winner;
-  if(r1done&&decBox&&(w===dec.a||w===dec.b))h+=path(b,decBox,dec.done?'fl solid':'fl gold');
+  if(r1done&&duelBox&&(w===duel.a||w===duel.b))h+=path(b,duelBox,duel.done?'fl solid':'fl gold');
+  else if(r1done&&decBox&&(w===dec.a||w===dec.b))h+=path(b,decBox,dec.done?'fl solid':'fl gold');
   else if(r1done&&w===state.byeTeam){goldSrc=b;h+=path(b,fin,'fl gold');}
   else h+=path(b,semi,r1done?'fl solid':'fl');
  }
+ if(duelBox){h+=path(duelBox,decBox||fin,duel.done?'fl solid':'fl goldfaint');
+  if(duel.done)h+=path(duelBox,semi,'fl solid');}
  if(decBox){h+=path(decBox,fin,dec.done?'fl gold':'fl goldfaint');
   h+=path(decBox,semi,dec.done?'fl solid':'fl');}
  if(!r1done)h+=path(box(1),fin,'fl goldfaint');
@@ -584,9 +601,9 @@ function drawFlow(){
 function renderBracket(){
  updateBracketLogic();
  state.matches.forEach((m,i)=>{
-  if(i===5){const el=$('m5');
+  if(i>=5){const el=$('m'+i);
    if(m.a==null){el.classList.add('hidden');el.innerHTML='';}
-   else{el.classList.remove('hidden');el.innerHTML=matchHTML(m,5);}
+   else{el.classList.remove('hidden');el.innerHTML=matchHTML(m,i);}
    return;}
   $('m'+i).innerHTML=matchHTML(m,i);});
  const fi=state.matches[4],cb=$('champBox');
@@ -604,13 +621,15 @@ function clickMatch(i){
 /* ================= MATCH PLAY ================= */
 function startMatch(mi){
  const m=state.matches[mi];
- m.sa=0;m.sb=0;m.done=false;m.winner=null;
+ m.sa=0;m.sb=0;m.done=false;m.winner=null;m.regA=null;m.regB=null;
+ const wipeM=x=>{const d=state.matches[x];d.a=null;d.b=null;d.sa=0;d.sb=0;d.done=false;d.winner=null;};
  if(mi===3)state.matches[4].b=null;
- if(mi<3||mi===5){const po=state.matches[3],fi=state.matches[4];
+ if(mi<3||mi>=5){const po=state.matches[3],fi=state.matches[4];
   po.done=false;po.sa=0;po.sb=0;po.winner=null;po.a=null;po.b=null;
   fi.done=false;fi.winner=null;fi.a=null;fi.b=null;state.byeTeam=null;}
- if(mi<3){const d=state.matches[5];d.a=null;d.b=null;d.sa=0;d.sb=0;d.done=false;d.winner=null;}
- play={mi,asked:[0,0],quota:mi===5?1:(state.perTeam||10),qIdx:null,phase:'idle',turn:0,hist:[[],[]]};
+ if(mi<3){wipeM(5);wipeM(6);}
+ if(mi===6)wipeM(5);
+ play={mi,asked:[0,0],quota:mi>=5?1:(state.perTeam||10),qIdx:null,phase:'idle',turn:0,hist:[[],[]]};
  $('matchLabel').textContent=m.name;
  show('game');nextQuestion();
 }
@@ -717,6 +736,7 @@ function skipQ(){
 function showDeathMatch(){
  stopTimer();snd('death');
  const m=state.matches[play.mi];
+ if(m.regA==null){m.regA=m.sa;m.regB=m.sb;}
  const ov=document.createElement('div');ov.id='overlay';
  ov.innerHTML='<div class="orays red"></div><div class="obox">'+
   '<div class="olbl" style="color:var(--bad1)">⚔️ Scores level at '+m.sa+'–'+m.sb+' ⚔️</div>'+
@@ -762,7 +782,7 @@ function endMatch(forced){
  const ov=document.createElement('div');ov.id='overlay';
  const isFinal=play.mi===4;
  ov.innerHTML='<div class="orays"></div><div class="obox">'+
-  '<div class="olbl">'+(isFinal?'🏆 Tournament Champion 🏆':play.mi===5?'⚡ Straight to the Final ⚡':'Winner — '+esc(m.name))+'</div>'+
+  '<div class="olbl">'+(isFinal?'🏆 Tournament Champion 🏆':play.mi===5?'⚡ Straight to the Final ⚡':play.mi===6?'⚔ Survives — one more duel for the Final spot':'Winner — '+esc(m.name))+'</div>'+
   '<div class="onm">'+esc(state.teams[m.winner])+'</div>'+
   '<div class="osc">'+esc(state.teams[m.a])+' '+m.sa+' — '+m.sb+' '+esc(state.teams[m.b])+'</div>'+
   '<button class="btn gold big" onclick="closeOverlay()">Back to bracket →</button></div>';
