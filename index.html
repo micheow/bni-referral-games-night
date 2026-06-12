@@ -3,6 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+/* On phones/small touch screens, render the full desktop layout and let the
+   browser zoom it to fit — so mobile shows the same proportions as desktop
+   (best viewed in landscape). */
+(function(){try{
+ var coarse=matchMedia('(pointer:coarse)').matches;
+ var small=Math.min(screen.width,screen.height)<=820;
+ if(coarse&&small){
+  var vp=document.querySelector('meta[name=viewport]');
+  if(vp)vp.setAttribute('content','width=1200, viewport-fit=cover');
+ }
+}catch(e){}})();
+</script>
 <title>BNI Referral Games Night</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -270,9 +283,21 @@ input:focus{outline:2px solid var(--gold)}
  .card{padding:18px 18px}
  .big{width:100%}
 }
+/* Nudge phones to landscape, where the desktop layout reads best */
+#rotateHint{display:none}
+@media (orientation:portrait) and (pointer:coarse){
+ #rotateHint{display:flex;position:fixed;inset:0;z-index:1000;flex-direction:column;
+  align-items:center;justify-content:center;gap:18px;text-align:center;padding:30px;
+  background:rgba(1,4,12,.96);color:var(--txt);
+  font-size:22px;font-weight:600;letter-spacing:.5px}
+ #rotateHint .ricon{font-size:64px;animation:rotn 2s ease-in-out infinite}
+ #rotateHint .rsub{font-size:15px;color:var(--mut);letter-spacing:1px}
+}
+@keyframes rotn{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
 </style>
 </head>
 <body>
+<div id="rotateHint"><div class="ricon">⟳</div><div>Rotate your device to landscape</div><div class="rsub">for the full games-night view</div></div>
 <div id="rays"></div><div id="vign"></div>
 <canvas id="confettiCv"></canvas>
 <!-- ============ SETUP ============ -->
