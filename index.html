@@ -308,7 +308,7 @@ input:focus{outline:2px solid var(--gold)}
  <h1 class="logo">Tournament Bracket</h1>
  <p class="sub">Highest-scoring Round 1 winner advances straight to the Final &middot; Round 1 uses opponents&rsquo; questions</p>
  <div id="champBox"></div>
- <div id="seedNote"><b>Fast-track ranking:</b> main questions only · sudden-death scores excluded</div>
+ <div id="seedNote"><b>Fast-track ranking:</b> Ranked on main questions only, sudden-death scores excluded</div>
  <div class="bracketwrap">
   <div class="round"><div class="roundtitle">Round 1</div>
    <div id="m0"></div><div id="m1"></div><div id="m2"></div></div>
@@ -403,8 +403,9 @@ function sndNow(kind){
   else if(kind==='timeup'){tone(320,0,.25,'square',.13);tone(250,.25,.45,'square',.13);}
   else if(kind==='skip'){tone(440,0,.1,'sine',.1);tone(330,.1,.14,'sine',.1);}
   else if(kind==='intro'){}
-  else if(kind==='death'){tone(58,0,.5,'sine',.3);tone(55,.45,.6,'sine',.3);
-   tone(110,.9,1.4,'sawtooth',.07);tone(116.5,.9,1.4,'sawtooth',.07);tone(220,1.0,1.2,'sine',.05,233);}
+  else if(kind==='death'){tone(220,0,.45,'sine',.26,55);tone(120,0,.12,'triangle',.2);
+   tone(200,.32,.5,'sine',.24,50);tone(110,.55,1.1,'sawtooth',.08);tone(116.5,.55,1.1,'sawtooth',.08);
+   tone(220,.6,1.0,'sine',.06,466);}
   else if(kind==='fanfare'){[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.13,.5,'triangle',.16));}
  }catch(e){}
 }
