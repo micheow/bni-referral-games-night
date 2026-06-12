@@ -46,7 +46,8 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--txt);
  width:100%;height:100%;display:flex;align-items:center;gap:16px}
 
 /* ---------- question & answers ---------- */
-#qWrap{margin:30px auto 26px;width:min(1240px,96%)}
+#qWrap{margin:30px auto 26px;width:min(1240px,96%);filter:drop-shadow(0 0 18px rgba(245,197,66,.22))}
+#qWrap .hx{background:linear-gradient(180deg,#ffe9a8 0%,#d9ac2e 30%,#8a6a1d 50%,#6b5012 52%,#d9ac2e 82%,#ffe9a8 100%)}
 #qWrap .hi{position:relative;overflow:hidden}
 #qWrap.sweep .hi::after{content:'';position:absolute;top:0;left:-45%;width:36%;height:100%;
  background:linear-gradient(100deg,transparent,rgba(255,255,255,.15),transparent);
@@ -226,7 +227,7 @@ input:focus{outline:2px solid var(--gold)}
 @media(max-width:900px){
  #flowSvg{display:none}
  .screen{padding:18px 14px 30px}
- .answers{grid-template-columns:1fr;gap:12px}
+ .answers{grid-template-columns:1fr;grid-auto-rows:auto;gap:12px}
  .teamgrid{grid-template-columns:1fr}
  .topbar{grid-template-columns:1fr 1fr;gap:10px}
  .mid{grid-column:1/-1;order:-1}
@@ -237,8 +238,8 @@ input:focus{outline:2px solid var(--gold)}
  .gctrl{gap:10px}
  .tp{padding:10px 14px}
  #qWrap{margin:18px auto 14px}
- #qWrap .hi{padding:16px 30px;font-size:19px;min-height:88px}
- .ans .hi{padding:12px 22px;font-size:16px;min-height:54px;gap:10px}
+ #qWrap .hi{padding:18px 30px;font-size:21px;font-weight:800;min-height:96px}
+ .ans .hi{padding:11px 20px;font-size:15.5px;min-height:0;gap:10px}
  .hex .hx{clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,14px 100%,0 50%)}
  .hex .hi{clip-path:polygon(13px 0,calc(100% - 13px) 0,100% 50%,calc(100% - 13px) 100%,13px 100%,0 50%)}
  .obox{padding:24px 18px}
@@ -285,7 +286,7 @@ input:focus{outline:2px solid var(--gold)}
  <div class="bracketwrap">
   <div class="round"><div class="roundtitle">Round 1</div>
    <div id="m0"></div><div id="m1"></div><div id="m2"></div></div>
-  <div class="round"><div class="roundtitle">Semi-Final</div><div id="m3"></div></div>
+  <div class="round"><div class="roundtitle">Semi-Final</div><div id="m5" class="hidden"></div><div id="m3"></div></div>
   <div class="round"><div class="roundtitle">Final</div><div id="m4"></div></div>
  </div>
  <div class="toolbar">
@@ -329,10 +330,13 @@ function freshState(teams,questions,timer,perTeam){
    {name:'Round 1 — Match 2',a:2,b:3,sa:0,sb:0,done:false,winner:null},
    {name:'Round 1 — Match 3',a:4,b:5,sa:0,sb:0,done:false,winner:null},
    {name:'Semi-Final',a:null,b:null,sa:0,sb:0,done:false,winner:null},
-   {name:'Final',a:null,b:null,sa:0,sb:0,done:false,winner:null}]};
+   {name:'Final',a:null,b:null,sa:0,sb:0,done:false,winner:null},
+   {name:'Sudden Death — Bye Decider',a:null,b:null,sa:0,sb:0,done:false,winner:null}]};
 }
 function save(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}}
-function load(){try{return JSON.parse(localStorage.getItem(LS));}catch(e){return null;}}
+function load(){try{const o=JSON.parse(localStorage.getItem(LS));
+ if(o&&o.matches&&o.matches.length===5)o.matches.push({name:'Sudden Death — Bye Decider',a:null,b:null,sa:0,sb:0,done:false,winner:null});
+ return o;}catch(e){return null;}}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function $(id){return document.getElementById(id);}
 function show(id){['setup','bracket','game'].forEach(s=>$(s).classList.toggle('hidden',s!==id));}
@@ -515,11 +519,16 @@ function initSetup(){
 /* ================= BRACKET ================= */
 function updateBracketLogic(){
  const sf=[state.matches[0],state.matches[1],state.matches[2]];
- if(!sf.every(m=>m.done))return;
+ const dec=state.matches[5];
+ if(!sf.every(m=>m.done)){dec.a=null;dec.b=null;dec.done=false;dec.winner=null;return;}
  const winners=sf.map(m=>({team:m.winner,score:Math.max(m.sa,m.sb)}))
   .sort((x,y)=>y.score-x.score);
- if(state.byeTeam==null||!winners.some(w=>w.team===state.byeTeam))
-  state.byeTeam=winners[0].team;
+ if(state.byeTeam==null){
+  if(winners[0].score===winners[1].score){ /* tie for top scorer -> sudden-death bye decider */
+   if(!dec.done){if(dec.a==null){dec.a=winners[0].team;dec.b=winners[1].team;}return;}
+   state.byeTeam=dec.winner;
+  }else state.byeTeam=winners[0].team;
+ }
  const others=winners.filter(w=>w.team!==state.byeTeam).map(w=>w.team);
  const po=state.matches[3],fi=state.matches[4];
  if(!po.done){po.a=others[0];po.b=others[1];}
@@ -551,23 +560,35 @@ function drawFlow(){
  const path=(a,b,cls)=>{const mx=(a.R+b.L)/2;
   return '<path class="'+cls+'" d="M'+a.R+' '+a.Y+' C '+mx+' '+a.Y+', '+mx+' '+b.Y+', '+b.L+' '+b.Y+'"/>';};
  const sf=[state.matches[0],state.matches[1],state.matches[2]];
+ const dec=state.matches[5];
  const r1done=sf.every(m=>m.done);
  const semi=box(3),fin=box(4);
- let h='',goldPath=null;
+ if(semi.L<=box(0).R+12||fin.L<=semi.R-1){svg.innerHTML='';return;} /* columns wrapped -> no lines */
+ const decBox=dec&&dec.a!=null&&!$('m5').classList.contains('hidden')?box(5):null;
+ let h='',goldSrc=null;
  for(let i=0;i<3;i++){
-  const b=box(i);
-  if(r1done&&sf[i].winner===state.byeTeam){goldPath=b;h+=path(b,fin,'fl gold');}
+  const b=box(i),w=sf[i].winner;
+  if(r1done&&decBox&&(w===dec.a||w===dec.b))h+=path(b,decBox,dec.done?'fl solid':'fl gold');
+  else if(r1done&&w===state.byeTeam){goldSrc=b;h+=path(b,fin,'fl gold');}
   else h+=path(b,semi,r1done?'fl solid':'fl');
  }
+ if(decBox){h+=path(decBox,fin,dec.done?'fl gold':'fl goldfaint');
+  h+=path(decBox,semi,dec.done?'fl solid':'fl');}
  if(!r1done)h+=path(box(1),fin,'fl goldfaint');
  h+=path(semi,fin,state.matches[3].done?'fl solid':'fl');
- const lb=goldPath||box(1);
- h+='<text class="flowlbl" x="'+((lb.R+fin.L)/2-46)+'" y="'+((lb.Y+fin.Y)/2-10)+'">TOP SCORER</text>';
+ const lb=goldSrc||(!r1done?box(1):null);
+ if(lb)h+='<text class="flowlbl" x="'+(lb.R+16)+'" y="'+(lb.Y-12)+'">TOP SCORER</text>';
+ if(decBox)h+='<text class="flowlbl" x="'+(decBox.L+8)+'" y="'+(decBox.Y-56)+'" style="fill:var(--bad1)">SUDDEN DEATH ⚔</text>';
  svg.innerHTML=h;
 }
 function renderBracket(){
  updateBracketLogic();
- state.matches.forEach((m,i)=>{$('m'+i).innerHTML=matchHTML(m,i);});
+ state.matches.forEach((m,i)=>{
+  if(i===5){const el=$('m5');
+   if(m.a==null){el.classList.add('hidden');el.innerHTML='';}
+   else{el.classList.remove('hidden');el.innerHTML=matchHTML(m,5);}
+   return;}
+  $('m'+i).innerHTML=matchHTML(m,i);});
  const fi=state.matches[4],cb=$('champBox');
  cb.innerHTML=fi.done?'<div class="champbox"><div class="lbl">🏆 CHAMPION 🏆</div><div class="nm">'+esc(state.teams[fi.winner])+'</div></div>':'';
  $('poolBtn').textContent='🗂 '+state.queue.length+' questions left in pool';
@@ -585,9 +606,11 @@ function startMatch(mi){
  const m=state.matches[mi];
  m.sa=0;m.sb=0;m.done=false;m.winner=null;
  if(mi===3)state.matches[4].b=null;
- if(mi<3){const po=state.matches[3],fi=state.matches[4];
-  po.done=false;po.sa=0;po.sb=0;po.winner=null;fi.done=false;fi.winner=null;}
- play={mi,asked:[0,0],quota:state.perTeam||10,qIdx:null,phase:'idle',turn:0,hist:[[],[]]};
+ if(mi<3||mi===5){const po=state.matches[3],fi=state.matches[4];
+  po.done=false;po.sa=0;po.sb=0;po.winner=null;po.a=null;po.b=null;
+  fi.done=false;fi.winner=null;fi.a=null;fi.b=null;state.byeTeam=null;}
+ if(mi<3){const d=state.matches[5];d.a=null;d.b=null;d.sa=0;d.sb=0;d.done=false;d.winner=null;}
+ play={mi,asked:[0,0],quota:mi===5?1:(state.perTeam||10),qIdx:null,phase:'idle',turn:0,hist:[[],[]]};
  $('matchLabel').textContent=m.name;
  show('game');nextQuestion();
 }
@@ -730,6 +753,7 @@ function endMatch(forced){
  m.done=true;
  m.winner=m.sa>=m.sb?m.a:m.b;
  if(m.sa===m.sb&&forced)m.winner=m.a;
+ if(play.mi===5)state.byeTeam=m.winner;
  state.results.push({match:m.name,teamA:state.teams[m.a],scoreA:m.sa,
   teamB:state.teams[m.b],scoreB:m.sb,winner:state.teams[m.winner],
   when:new Date().toLocaleString()});
@@ -738,7 +762,7 @@ function endMatch(forced){
  const ov=document.createElement('div');ov.id='overlay';
  const isFinal=play.mi===4;
  ov.innerHTML='<div class="orays"></div><div class="obox">'+
-  '<div class="olbl">'+(isFinal?'🏆 Tournament Champion 🏆':'Winner — '+esc(m.name))+'</div>'+
+  '<div class="olbl">'+(isFinal?'🏆 Tournament Champion 🏆':play.mi===5?'⚡ Straight to the Final ⚡':'Winner — '+esc(m.name))+'</div>'+
   '<div class="onm">'+esc(state.teams[m.winner])+'</div>'+
   '<div class="osc">'+esc(state.teams[m.a])+' '+m.sa+' — '+m.sb+' '+esc(state.teams[m.b])+'</div>'+
   '<button class="btn gold big" onclick="closeOverlay()">Back to bracket →</button></div>';
