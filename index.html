@@ -335,9 +335,10 @@ input:focus{outline:2px solid var(--gold)}
  <div class="gctrl">
   <button class="btn" id="skipBtn">&#9197; Skip</button>
   <button class="btn gold hidden" id="nextBtn">Next question &rarr;</button>
-  <button class="btn ghost" id="quitBtn">Exit to bracket</button>
+  <button class="btn ghost hidden" id="undoBtn">&#8617; Undo</button>
+  <button class="btn ghost" id="quitBtn">Exit to Main</button>
  </div>
- <p class="kbd">Host keys: <span>1</span>&ndash;<span>4</span> lock answer &middot; <span>S</span> skip &middot; <span>N</span>/<span>Space</span> next</p>
+ <p class="kbd">Host keys: <span>1</span>&ndash;<span>4</span> lock answer &middot; <span>S</span> skip &middot; <span>U</span> undo &middot; <span>N</span>/<span>Space</span> next</p>
 </div>
 <script>
 'use strict';
@@ -762,6 +763,7 @@ function nextQuestion(){
   d.innerHTML='<div class="hx"><div class="hi"><span class="ltr">'+L+':</span><span>'+esc(q.a[i])+'</span></div></div>';
   d.addEventListener('click',()=>lockAnswer(i));an.appendChild(d);});
  $('nextBtn').classList.add('hidden');$('skipBtn').classList.remove('hidden');
+ $('undoBtn').classList.add('hidden');play.last=null;
  updatePanels();startTimer();save();
 }
 /* --- two-stage WWTBAM reveal: lock in → suspense → reveal --- */
@@ -795,7 +797,9 @@ function reveal(i){
   $('turnBanner').innerHTML=i>=0?'❌ <b>Wrong!</b> The correct answer flashes green':'⏰ <b>Time\'s up!</b> Correct answer shown';}
  play.hist[play.turn][play.asked[play.turn]]=ok;
  play.asked[play.turn]++;
+ play.last={kind:'mcq',turn:play.turn,qIdx:play.qIdx,delta:ok?1:0};
  $('nextBtn').classList.remove('hidden');$('skipBtn').classList.add('hidden');
+ $('undoBtn').classList.remove('hidden');
  updatePanels();save();
 }
 function nextOpenQuestion(){
@@ -822,6 +826,7 @@ function nextOpenQuestion(){
  if(q.answer){$('modelAns').textContent=q.answer;
   $('revealBtn').addEventListener('click',()=>{$('modelAns').classList.remove('hidden');$('revealBtn').classList.add('hidden');});}
  $('nextBtn').classList.add('hidden');$('skipBtn').classList.remove('hidden');
+ $('undoBtn').classList.add('hidden');play.last=null;
  updatePanels();startTimer(state.timerSecs*2);save();
 }
 function awardOpen(p){
@@ -832,9 +837,11 @@ function awardOpen(p){
  play.hist[play.turn][play.quota+play.openAsked[play.turn]]=p>0;
  play.openAsked[play.turn]++;
  play.phase='revealed';
+ play.last={kind:'open',turn:play.turn,qIdx:play.qIdx,delta:p};
  if(p>0){snd('correct');burst(110+p*40);}else snd('wrong');
  $('turnBanner').innerHTML='⭐ <b>'+p+' point'+(p===1?'':'s')+'</b> to '+esc(teamOf(play.turn));
  $('nextBtn').classList.remove('hidden');$('skipBtn').classList.add('hidden');
+ $('undoBtn').classList.remove('hidden');
  updatePanels();save();
 }
 function skipQ(){
@@ -864,6 +871,24 @@ function startDeathMatch(){
  play.quota++;snd('fanfare');
  $('turnBanner').innerHTML='⚔️ <b style="color:var(--bad1)">DEATH MATCH</b> — sudden death!';
  nextQuestion();
+}
+function undoLast(){
+ if(!play||play.phase!=='revealed'||!play.last)return;
+ const L=play.last,m=state.matches[play.mi];
+ if(L.turn===0)m.sa-=L.delta;else m.sb-=L.delta;
+ if(L.kind==='mcq'){
+  play.asked[L.turn]--;
+  play.hist[L.turn].length=Math.max(0,play.hist[L.turn].length-1);
+  state.queue.unshift(L.qIdx);
+ }else{
+  play.openAsked[L.turn]--;
+  play.hist[L.turn][play.quota+play.openAsked[L.turn]]=undefined;
+  state.openQueue.unshift(L.qIdx);
+ }
+ play.last=null;snd('skip');
+ $('turnBanner').innerHTML='↩ Undone — same question coming back';
+ updatePanels();save();
+ setTimeout(nextQuestion,400);
 }
 /* ================= TIMER ================= */
 let timerInt=null,tLeft=0,timerBase=30;
@@ -926,6 +951,7 @@ $('nextBtn').addEventListener('click',()=>{if(play&&play.phase==='revealed')next
 $('quitBtn').addEventListener('click',()=>{
  if(confirm('Exit this match? Its progress will be lost (questions used stay used).')){
   stopTimer();play=null;renderBracket();show('bracket');}});
+$('undoBtn').addEventListener('click',undoLast);
 $('exportBtn').addEventListener('click',exportCSV);
 $('resetBtn').addEventListener('click',()=>{
  if(confirm('Reset the WHOLE tournament? Scores and bracket will be wiped.')){
@@ -935,6 +961,7 @@ document.addEventListener('keydown',e=>{
  if(play.phase==='openq'&&e.key>='0'&&e.key<='5')awardOpen(+e.key);
  else if(e.key>='1'&&e.key<='4'&&play.phase==='open')lockAnswer(+e.key-1);
  else if((e.key==='s'||e.key==='S')&&play.phase==='open')skipQ();
+ else if((e.key==='u'||e.key==='U')&&play.phase==='revealed')undoLast();
  else if((e.key==='n'||e.key==='N'||e.key===' ')&&play.phase==='revealed'){e.preventDefault();nextQuestion();}});
 addEventListener('resize',()=>requestAnimationFrame(drawFlow));
 initSetup();
