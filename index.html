@@ -901,6 +901,8 @@ function skipQ(){
  setTimeout(nextQuestion,450);
 }
 function showDeathMatch(){
+ if($('overlay'))return;
+ play.phase='deathmatch';
  stopTimer();
  if(dmReady){try{dmAudio.currentTime=0;dmAudio.play().catch(()=>snd('death'));}catch(e){snd('death');}}
  else snd('death');
@@ -915,6 +917,8 @@ function showDeathMatch(){
  document.body.appendChild(ov);
 }
 function startDeathMatch(){
+ if(!play||play.phase!=='deathmatch')return;
+ play.phase='serving';
  const o=$('overlay');if(o)o.remove();
  play.quota++;snd('fanfare');
  $('turnBanner').innerHTML='⚔️ <b style="color:var(--bad1)">DEATH MATCH</b>: sudden death!';
@@ -1005,6 +1009,11 @@ $('resetBtn').addEventListener('click',()=>{
  if(confirm('Reset the WHOLE tournament? Scores and bracket will be wiped.')){
   localStorage.removeItem(LS);location.reload();}});
 document.addEventListener('keydown',e=>{
+ if($('overlay')&&(e.key===' '||e.key==='Enter'||e.key==='n'||e.key==='N')){
+  e.preventDefault();
+  if(play&&play.phase==='deathmatch')startDeathMatch();
+  else if(!play)closeOverlay();
+  return;}
  if($('game').classList.contains('hidden')||!play)return;
  if(play.phase==='openq'&&e.key>='0'&&e.key<='3')awardOpen(+e.key);
  else if(e.key>='1'&&e.key<='4'&&play.phase==='open')lockAnswer(+e.key-1);
