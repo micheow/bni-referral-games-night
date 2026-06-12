@@ -393,6 +393,17 @@ function tone(f,start,dur,type,gain,fEnd){
  g.gain.exponentialRampToValueAtTime(.001,t+start+dur);
  o.start(t+start);o.stop(t+start+dur+.05);
 }
+function noiseHit(start,dur,gain,freq){
+ const a=ac(),t=a.currentTime+start;
+ const len=Math.floor(a.sampleRate*dur),buf=a.createBuffer(1,len,a.sampleRate);
+ const d=buf.getChannelData(0);
+ for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
+ const src=a.createBufferSource();src.buffer=buf;
+ const fl=a.createBiquadFilter();fl.type='lowpass';fl.frequency.value=freq||220;
+ const g=a.createGain();g.gain.setValueAtTime(gain||.3,t);
+ g.gain.exponentialRampToValueAtTime(.001,t+dur);
+ src.connect(fl);fl.connect(g);g.connect(a.destination);src.start(t);src.stop(t+dur);
+}
 function sndNow(kind){
  try{
   if(kind==='lockin'){tone(220,0,.12,'sine',.16,110);tone(660,0,.05,'triangle',.07);}
@@ -403,10 +414,11 @@ function sndNow(kind){
   else if(kind==='timeup'){tone(320,0,.25,'square',.13);tone(250,.25,.45,'square',.13);}
   else if(kind==='skip'){tone(440,0,.1,'sine',.1);tone(330,.1,.14,'sine',.1);}
   else if(kind==='intro'){}
-  else if(kind==='death'){tone(180,0,.5,'sine',.3,50);tone(95,0,.08,'sine',.18);
-   tone(170,.38,.6,'sine',.28,45);
-   tone(110,.5,1.2,'triangle',.06);tone(130.8,.5,1.2,'triangle',.06);tone(164.8,.5,1.2,'triangle',.05);
-   tone(220,.6,1.0,'sine',.05,440);}
+  else if(kind==='death'){
+   noiseHit(0,.45,.55,220);tone(150,0,.55,'sine',.42,42);tone(80,0,.1,'sine',.3);
+   noiseHit(.42,.5,.5,190);tone(140,.42,.7,'sine',.4,38);
+   tone(110,.55,1.4,'triangle',.09);tone(130.8,.55,1.4,'triangle',.09);tone(164.8,.55,1.4,'triangle',.07);
+   tone(220,.65,1.1,'sine',.07,440);}
   else if(kind==='fanfare'){[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.13,.5,'triangle',.16));}
  }catch(e){}
 }
