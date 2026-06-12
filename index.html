@@ -5,14 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>
 /* On phones/small touch screens, render the full desktop layout and let the
-   browser zoom it to fit — so mobile shows the same proportions as desktop
-   (best viewed in landscape). */
+   browser zoom it to fit. The viewport WIDTH is derived from the device's
+   landscape aspect ratio so the visible HEIGHT lands around a desktop's
+   (~860px) — otherwise a wide phone shows a short slice and content bleeds
+   downward. Same proportions as desktop; best viewed in landscape. */
 (function(){try{
  var coarse=matchMedia('(pointer:coarse)').matches;
- var small=Math.min(screen.width,screen.height)<=820;
- if(coarse&&small){
+ var lo=Math.min(screen.width,screen.height),hi=Math.max(screen.width,screen.height);
+ if(coarse&&lo<=820){
+  var aspect=hi/lo;                              /* landscape aspect of the device */
+  var w=Math.max(1150,Math.min(1900,Math.round(860*aspect)));
   var vp=document.querySelector('meta[name=viewport]');
-  if(vp)vp.setAttribute('content','width=1200, viewport-fit=cover');
+  if(vp)vp.setAttribute('content','width='+w+', viewport-fit=cover');
  }
 }catch(e){}})();
 </script>
@@ -282,6 +286,13 @@ input:focus{outline:2px solid var(--gold)}
  .champbox{padding:18px 20px}
  .card{padding:18px 18px}
  .big{width:100%}
+}
+/* Keep the 3-column bracket (Round 1 · Semi-Final · Final) on one row at
+   narrower scaled widths instead of wrapping the Final onto a new row below */
+@media(min-width:901px) and (max-width:1320px){
+ .bracketwrap{gap:42px}
+ .round{min-width:240px}
+ .match{min-width:0}
 }
 /* Nudge phones to landscape, where the desktop layout reads best */
 #rotateHint{display:none}
