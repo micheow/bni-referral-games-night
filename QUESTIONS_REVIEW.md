@@ -749,11 +749,11 @@ _Correct: **A**_
 _Correct: **D**_
 
 **Q90. Which of the following is NOT considered one of Hon Kee’s USPs?**
-- A) Personalised consultation with a focus on client’s needs
-- B) Competitive prices ✅
-- C) Consistent colour and accurate art work printed
-- D) 2. Alex Yang (2Q) - Checked
-_Correct: **B**_
+- A) Quick response time
+- B) Personalised consultation with a focus on client’s needs
+- C) Competitive prices ✅
+- D) Consistent colour and accurate art work printed
+_Correct: **C**_
 
 **Q91. Which are the TWO publications that Alex Yang’s work have been featured in?**
 - A) Tatler and CNA Lifestyle
@@ -784,11 +784,11 @@ _Correct: **D**_
 _Correct: **B**_
 
 **Q95. What is Winston’s USP?**
-- A) Bringing out energy from the audience
-- B) Rich experience with various events
-- C) All of the above ✅
-- D) 4. Jack Wang (3Q) - Checked
-_Correct: **C**_
+- A) Real genuine audience engagement
+- B) Bringing out energy from the audience
+- C) Rich experience with various events
+- D) All of the above ✅
+_Correct: **D**_
 
 **Q96. Who is Jack’s ideal referral?**
 - A) Residential Managing Agents (MA) ✅
@@ -805,11 +805,11 @@ _Correct: **A**_
 _Correct: **C**_
 
 **Q98. What is Jack’s USP?**
-- A) Patented installation system of raised floor system for timber decking
-- B) Cost-efficient spot repair and maintenance of timber decking and fencing
-- C) All of the above ✅
-- D) 5. Cynthia Lee (2Q) - Checked
-_Correct: **C**_
+- A) Quality timber decking customised to clients’ needs
+- B) Patented installation system of raised floor system for timber decking
+- C) Cost-efficient spot repair and maintenance of timber decking and fencing
+- D) All of the above ✅
+_Correct: **D**_
 
 **Q99. Who is/are Cynthia’s Ideal client(s)?**
 - A) Home owner
@@ -833,11 +833,11 @@ _Correct: **C**_
 _Correct: **C**_
 
 **Q102. What is one trait of Eileen Kwa’s that she’s most proud of and keeps clients coming back?**
-- A) Reliability ✅
-- B) Quick response time
-- C) Positive mindset
-- D) 9. Alex Tan (3Q) - Checked
-_Correct: **A**_
+- A) Consistency
+- B) Reliability ✅
+- C) Quick response time
+- D) Positive mindset
+_Correct: **B**_
 
 **Q103. Who is Alex Tan’s ideal client?**
 - A) Couples who just applied for BTO
@@ -854,11 +854,11 @@ _Correct: **D**_
 _Correct: **D**_
 
 **Q105. How many weddings has Alex Tan planned since the year 2024?**
-- A) 100+ ✅
-- B) 200+
-- C) 300+
-- D) 10. Darren Lim (2Q) - Checked
-_Correct: **A**_
+- A) 80+
+- B) 100+ ✅
+- C) 200+
+- D) 300+
+_Correct: **B**_
 
 **Q106. What is Darren’s Golden Goose referral?**
 - A) Marketing consultant
@@ -903,11 +903,11 @@ _Correct: **A**_
 _Correct: **B**_
 
 **Q112. What is Christine’s STRONGEST USP?**
-- A) Deep knowledge on the F&B industry
-- B) CQ Works is probably the only PR agency that conceptualises ✅
-- C) More than 10 years of experience
-- D) 13. Jason Long (2Q) - Checked
-_Correct: **B**_
+- A) Strong relationships with the media
+- B) Deep knowledge on the F&B industry
+- C) CQ Works is probably the only PR agency that conceptualises ✅
+- D) More than 10 years of experience
+_Correct: **C**_
 
 **Q113. Who is Jason’s MOST ideal client?**
 - A) Retail stores concerned about security
