@@ -2,15 +2,15 @@
 
 **Total: 148 questions** · Round 1 (team-owned): 65 · Rounds 2 & 3 shared pool: 83
 
-> **How rounds work in the game:**
-> - **Round 1 (Matches 1–3):** Each team is asked its *opponent's* submitted questions (the team-owned questions below). 10 questions per team per match.
-> - **Semi-Final (Round 2) & Final (Round 3):** Questions are drawn live from the shared pool below (10 per team). The pool is **not pre-split** between Round 2 and Round 3 — questions are dealt dynamically and avoid serving a team its own questions.
+> **How rounds work:**
+> - **Round 1 (Matches 1–3):** each team answers its *opponent's* submitted questions. 10 per team.
+> - **Semi-Final (R2) & Final (R3):** drawn live from the shared pool (10 per team); not pre-split between R2 and R3.
 
 ---
 
 # ROUND 1 — Team-Owned Questions
 
-_In Round 1 the matchups are: Match 1 = Team Henry vs Team Stacey · Match 2 = Team William vs Team Winston · Match 3 = Team Alex vs Team Hon Kee. Each team answers the **opponent's** questions._
+_Match 1 = Henry vs Stacey · Match 2 = William vs Winston · Match 3 = Alex vs Hon Kee. Each team answers the **opponent's** questions._
 
 
 ## Team Henry (10 questions)
@@ -211,14 +211,14 @@ _Correct: **B**_
 
 *— Hannah —*
 
-**Q23. 1.⁠ ⁠A homeowner contacts Fixwerks regarding an old appliance that has stopped functioning. Upon assessment, it’s found that the original spare parts are already obsolete. Which of the following BEST reflects Fixwerks value proposition?**
+**Q23. A homeowner contacts Fixwerks regarding an old appliance that has stopped functioning. Upon assessment, it’s found that the original spare parts are already obsolete. Which of the following BEST reflects Fixwerks value proposition?**
 - A) Inform customer that parts are obsolete and advise to buy new appliance
 - B) Modify the appliance for it to be functional with the approval of the customer
 - C) Use other Original Equipment Manufacturer (OEM) parts to retro-fit for the repair service ✅
 - D) Advise the customer that we can still repair but customer will have to buy parts online at their risk
 _Correct: **C**_
 
-**Q24. 2. An appliance brand is considering outsourcing their aftersales operations but want a partner that can professionally represent their brand throughout the customer journey. Which of the following BEST represents the company’s key differentiator?**
+**Q24. An appliance brand is considering outsourcing their aftersales operations but want a partner that can professionally represent their brand throughout the customer journey. Which of the following BEST represents the company’s key differentiator?**
 - A) Providing technicians for each service request
 - B) Managing entire end-to-end appliance aftersales support including customer service, installation, onsite repair, warranty management, spare parts handling, and service documentation
 - C) Customised aftersales solutions tailored for the brands requirement i.e Customer Service + Installation only/Warranty management + Repair only ✅
@@ -228,31 +228,31 @@ _Correct: **C**_
 
 *— Ginn —*
 
-**Q25. Q1: Ginn is a QP. What is QP an abbreviation for?**
-- A) (A) A professional whose practice is governed by the Architects Act of Singapore
-- B) (B) Qualified Person
-- C) (C) A Registered Architect with a practicing license
-- D) (D) All of the above ✅
+**Q25. Ginn is a QP. What is QP an abbreviation for?**
+- A) A professional whose practice is governed by the Architects Act of Singapore
+- B) Qualified Person
+- C) A Registered Architect with a practicing license
+- D) All of the above ✅
 _Correct: **D**_
 
-**Q26. Q2 - What service can an architect like Ginn offer?**
-- A) (A) Structural Endorsement and Inspection
-- B) (B) Engineering Design
-- C) (C) Building Design, Interior Architecture, and regulatory authority submissions like URA, SCDF , JTC ✅
-- D) (D) All of above
+**Q26. What service can an architect like Ginn offer?**
+- A) Structural Endorsement and Inspection
+- B) Engineering Design
+- C) Building Design, Interior Architecture, and regulatory authority submissions like URA, SCDF , JTC ✅
+- D) All of above
 _Correct: **C**_
 
 
 *— Wink —*
 
-**Q27. 1.⁠ ⁠Which customer is MOST likely to become a referral for Hana Home Furnishing?**
+**Q27. Which customer is MOST likely to become a referral for Hana Home Furnishing?**
 - A) Someone looking for cheap furniture
 - B) A homeowner collecting keys for a new condo ✅
 - C) A developer for a commercial building
 - D) A basement office unit
 _Correct: **B**_
 
-**Q28. 2.⁠ ⁠What information is MOST useful before referring a curtain specialist?**
+**Q28. What information is MOST useful before referring a curtain specialist?**
 - A) Customer’s favourite colour
 - B) Customer’s renovation stage and window measurements ✅
 - C) Customer’s current home design
@@ -580,8 +580,6 @@ _Correct: **B**_
 
 # ROUNDS 2 & 3 — Shared Pool
 
-_These are drawn live during the Semi-Final and Final. They are not assigned to a fixed round._
-
 **Q66. What is Ya Ting’s official trade representation in Elite?**
 - A) Portrait Photography
 - B) Corporate Photography
@@ -589,28 +587,28 @@ _These are drawn live during the Semi-Final and Final. They are not assigned to 
 - D) Photography
 _Correct: **C**_
 
-**Q67. 2. What is Ya Ting’s ideal referral?**
+**Q67. What is Ya Ting’s ideal referral?**
 - A) A big international brand ✅
 - B) Social media influencers
 - C) Government agencies
 - D) Corporate MNC
 _Correct: **A**_
 
-**Q68. 3. What projects does Ya Ting NOT take?**
+**Q68. What projects does Ya Ting NOT take?**
 - A) IC photos
 - B) Actual day weddings
 - C) Newborn photography
 - D) All of the above ✅
 _Correct: **D**_
 
-**Q69. 4. What’re the work experiences that Ya Ting had that contribute to her work now?**
+**Q69. What’re the work experiences that Ya Ting had that contribute to her work now?**
 - A) Fine art exhibitions
 - B) Part-time uploader at ST.COM
 - C) Video producer
 - D) All of the above ✅
 _Correct: **D**_
 
-**Q70. 5. What’s Ya Ting’s basic rate for photography?**
+**Q70. What’s Ya Ting’s basic rate for photography?**
 - A) $100/hr
 - B) $120/hr
 - C) $200/hr ✅
@@ -687,14 +685,14 @@ _Correct: **B**_
 - D) None of the above ✅
 _Correct: **D**_
 
-**Q81. 16. Who is Li Kar’s ideal client?**
+**Q81. Who is Li Kar’s ideal client?**
 - A) Women who are hereditary at risk of breast cancer
 - B) Human Resources ✅
 - C) Doctors specialising in breast cancer
 - D) Wellness instructors such as Pilates and Yoga
 _Correct: **B**_
 
-**Q82. 2. What did Breast Friend start off as?**
+**Q82. What did Breast Friend start off as?**
 - A) Skincare product company ✅
 - B) Cancer research
 - C) Medical clinic
@@ -799,7 +797,7 @@ _Correct: **C**_
 - D) Interior Design firms
 _Correct: **A**_
 
-**Q97. Who is Jack’s Golden Goose? (Repeated Question in Team submission)**
+**Q97. Who is Jack’s Golden Goose?**
 - A) Landed property owners
 - B) Established furniture retailer with chains across Asia
 - C) Director of a Managing Agents company (MA) ✅
