@@ -875,14 +875,21 @@ function nextQuestion(){
  const accent=turn===0?'#f5c542':'#4dd7ff';
  const qOwner=state.questions[play.qIdx].owner;
  const qPerson=state.questions[play.qIdx].person||'';
+ const qGroup=state.questions[play.qIdx].group||'';
  const myIdx=(turn===0?state.matches[play.mi].a:state.matches[play.mi].b);
- let fromHTML='';
- if(qPerson&&qOwner!=null)fromHTML=esc(state.teams[qOwner])+', '+esc(qPerson);
- else if(qPerson)fromHTML=esc(qPerson);
- else if(qOwner!=null&&qOwner!==myIdx)fromHTML=esc(state.teams[qOwner]);
- $('turnBanner').innerHTML='🎯 <b style="color:'+accent+'">'+esc(teamOf(turn))+'</b>, '+
-  (fromHTML?'a question from <b>'+fromHTML+'</b>':'your question');
- $('qNum').textContent='Question '+(play.asked[0]+play.asked[1]+1)+' of '+(play.quota*2+(play.mi===4?4:0));
+ const teamB='<b style="color:'+accent+'">'+esc(teamOf(turn))+'</b>';
+ if(qOwner==null&&qGroup&&qGroup!=='BNI')
+  $('turnBanner').innerHTML='🎯 A question for '+teamB+' about <b>'+esc(qGroup)+'</b>’s business';
+ else if(qOwner==null&&qGroup==='BNI')
+  $('turnBanner').innerHTML='🎯 '+teamB+' — a general BNI question';
+ else{
+  let fromHTML='';
+  if(qPerson&&qOwner!=null)fromHTML=esc(state.teams[qOwner])+', '+esc(qPerson);
+  else if(qPerson)fromHTML=esc(qPerson);
+  else if(qOwner!=null&&qOwner!==myIdx)fromHTML=esc(state.teams[qOwner]);
+  $('turnBanner').innerHTML='🎯 '+teamB+', '+(fromHTML?'a question from <b>'+fromHTML+'</b>':'your question');
+ }
+ $('qNum').textContent='Question '+(play.asked[0]+play.asked[1]+1)+' of '+(play.quota*2+(play.mi===4&&state.openQueue.length?4:0));
  const qw=$('qWrap');qw.style.animation='none';qw.classList.remove('sweep');void qw.offsetWidth;
  qw.style.animation='slidein .4s ease';qw.classList.add('sweep');
  $('qText').textContent=q.q;
