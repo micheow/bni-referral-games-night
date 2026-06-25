@@ -4,7 +4,9 @@
 
 > **How rounds work:**
 > - **Round 1 (Matches 1–3):** each team answers its *opponent's* submitted questions. 10 per team.
-> - **Semi-Final (R2) & Final (R3):** drawn live from the shared pool (10 per team); not pre-split between R2 and R3.
+> - **Semi-Final (R2) & Final (R3):** drawn live from the shared pool (10 per team).
+
+> **Timer:** auto-scales with spoken length — ≤45 words = 30s · 46–80 = 45s · >80 = 60s.
 
 ---
 
@@ -569,10 +571,10 @@ _Correct: **A**_
 _Correct: **B**_
 
 **Q65. WHAT IS RICHARD’S STRONGEST USP?**
-- A) Client -First Mindset. Always prioritize clients’ interest and go the extra mile to negotiate the best possible outcomes with underwriters.
-- B) Established relationships and access to underwriters, senior service teams and claims officers negotiating for best outcomes for clients. ✅
-- C) Holistic Advisory. Provide well-rounded advice covering financial planning particularly life and disability insurance and personal guidance based on deep client understanding.
-- D) 24/7 Accessibility & Continuity. Always reachable across time zones with succession planning with Clients Care partnering with son, Josiah Boh.
+- A) Client-first mindset — always going the extra mile to negotiate the best outcomes with underwriters.
+- B) Established relationships and access to underwriters, service teams and claims officers for the best client outcomes. ✅
+- C) Holistic advisory — well-rounded financial, life and disability insurance advice based on deep client understanding.
+- D) 24/7 accessibility and continuity — always reachable, with succession planning via his son, Josiah Boh.
 _Correct: **B**_
 
 
