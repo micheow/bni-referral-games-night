@@ -662,7 +662,7 @@ function initSetup(){
   '<b style="color:var(--gold)">'+esc(BAKED.teams[p[0]])+'</b> '+
   '<span style="color:var(--mut)">vs</span> '+
   '<b style="color:var(--silver)">'+esc(BAKED.teams[p[1]])+'</b></div>';}).join('');
- $('bankNote').innerHTML=BAKED.q.length+' questions in the bank · '+SETTINGS.timerSecs+'s per question.<br>Round 1: '+SETTINGS.round1PerTeam+' questions per team (each team faces its opponent’s questions). Semi-final &amp; Final: '+SETTINGS.poolPerTeam+' per team from the shared pool. The Final runs multiple-choice until open-ended questions are added.';
+ $('bankNote').innerHTML=BAKED.q.length+' questions in the bank · '+SETTINGS.timerSecs+'s per question (longer questions auto-extend to 45s / 60s so the host has time to read).<br>Round 1: '+SETTINGS.round1PerTeam+' questions per team (each team faces its opponent’s questions). Semi-final &amp; Final: '+SETTINGS.poolPerTeam+' per team from the shared pool. The Final runs multiple-choice until open-ended questions are added.';
  $('startBtn').addEventListener('click',startTournament);
  const saved=load();
  if(saved&&saved.matches){$('resumeBtn').style.display='block';
@@ -852,7 +852,7 @@ function nextQuestion(){
  $('undoBtn').classList.add('hidden');play.last=null;
  fitText($('qText'),15);
  document.querySelectorAll('.ans .hi').forEach(el=>fitText(el,12,el.querySelector('span:last-child')));
- updatePanels();startTimer();save();
+ updatePanels();startTimer(qTime(q));save();
 }
 /* --- two-stage WWTBAM reveal: lock in → suspense → reveal --- */
 function lockAnswer(i){
@@ -988,6 +988,20 @@ function undoLast(){
  const tok=play;setTimeout(()=>{if(play===tok)nextQuestion();},400);
 }
 /* ================= TIMER ================= */
+/* Adaptive per-question clock: the MC reads the question AND all four options
+   aloud, so base the time on total spoken words (~140 wpm read + ~12s to answer).
+   ≤45 words → base (30s) · 46–80 → +15s (45s) · >80 → +30s (60s). */
+function qWords(q){
+ let n=String(q.q||'').trim().split(/\s+/).filter(Boolean).length;
+ if(q.a)q.a.forEach(o=>{n+=String(o||'').trim().split(/\s+/).filter(Boolean).length;});
+ return n;
+}
+function qTime(q){
+ const b=state.timerSecs,w=qWords(q);
+ if(w>80)return b+30;
+ if(w>45)return b+15;
+ return b;
+}
 let timerInt=null,tLeft=0,timerBase=30;
 function startTimer(secs){
  stopTimer();timerBase=secs||state.timerSecs;tLeft=timerBase;renderTimer();
