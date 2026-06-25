@@ -982,7 +982,10 @@ function nextOpenQuestion(){
  $('nextBtn').classList.add('hidden');$('skipBtn').classList.remove('hidden');
  $('undoBtn').classList.add('hidden');play.last=null;
  fitText($('qText'),15);
- updatePanels();startTimer(state.timerSecs*2);save();
+ updatePanels();
+ /* open round is host-judged with no countdown — show a mic in the clock */
+ stopTimer();const ck=$('clock');ck.classList.remove('low');ck.style.setProperty('--p',100);$('timerText').textContent='🎤';
+ save();
 }
 function awardOpen(p){
  if(!play||play.phase!=='openq')return;
