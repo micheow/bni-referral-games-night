@@ -785,7 +785,7 @@ function renderBracket(){
   $('m'+i).innerHTML=matchHTML(m,i);});
  const fi=state.matches[4],cb=$('champBox');
  cb.innerHTML=fi.done?'<div class="champbox"><div class="lbl">🏆 CHAMPION 🏆</div><div class="nm">'+esc(state.teams[fi.winner])+'</div></div>':'';
- $('poolBtn').textContent='🗂 '+state.queue.length+' questions left in pool';
+ $('poolBtn').textContent='🗂 '+(state.queue.length+(state.poolQueue?state.poolQueue.length:0))+' questions left in pool';
  save();
  requestAnimationFrame(drawFlow);
 }
@@ -847,6 +847,13 @@ function drawQuestion(){
  if(pick<0)pick=state.queue.findIndex(i=>Q[i].owner!==answering);
  if(pick<0)pick=0;
  return state.queue.splice(pick,1)[0];
+}
+/* Return a skipped/undone MCQ to the queue it came from: neutral pool questions
+   go back to poolQueue, Round-1 team questions to queue. toFront=true (undo) so
+   the SAME question is served next; false (skip) sends it to the back. */
+function returnMcq(qIdx,toFront){
+ const tgt=(state.questions[qIdx].owner==null&&state.poolQueue)?state.poolQueue:state.queue;
+ if(toFront)tgt.unshift(qIdx);else tgt.push(qIdx);
 }
 function nextQuestion(){
  const m=state.matches[play.mi];
@@ -979,7 +986,7 @@ function skipQ(){
   const tok=play;setTimeout(()=>{if(play===tok)nextQuestion();},450);return;}
  if(play.phase!=='open')return;
  play.phase='skipping';stopTimer();snd('skip');
- state.queue.push(play.qIdx);
+ returnMcq(play.qIdx,false);
  $('turnBanner').innerHTML='⏭ Skipped. Question returned to the pool';
  const tok=play;setTimeout(()=>{if(play===tok)nextQuestion();},450);
 }
@@ -1014,7 +1021,7 @@ function undoLast(){
  if(L.kind==='mcq'){
   play.asked[L.turn]--;
   play.hist[L.turn].length=Math.max(0,play.hist[L.turn].length-1);
-  state.queue.unshift(L.qIdx);
+  returnMcq(L.qIdx,true);
  }else{
   play.openAsked[L.turn]--;
   play.histO[L.turn][play.openAsked[L.turn]]=undefined;
