@@ -393,6 +393,7 @@ input:focus{outline:2px solid var(--gold)}
   <button class="btn" id="skipBtn">&#9197; Skip</button>
   <button class="btn gold hidden" id="nextBtn">Next question &rarr;</button>
   <button class="btn ghost hidden" id="undoBtn">&#8617; Undo</button>
+  <button class="btn danger" id="endGameBtn">&#127937; End &amp; take score</button>
   <button class="btn ghost" id="quitBtn">Exit to Main</button>
  </div>
  <p class="kbd">Host keys: <span>Space</span> start timer &middot; <span>1</span>&ndash;<span>4</span> lock answer &middot; <span>S</span> skip &middot; <span>U</span> undo &middot; <span>N</span>/<span>Space</span> next</p>
@@ -1145,6 +1146,14 @@ $('nextBtn').addEventListener('click',()=>{if(play&&play.phase==='revealed')next
 $('quitBtn').addEventListener('click',()=>{
  if(confirm('Exit this match? Its progress will be lost (questions used stay used).')){
   stopTimer();play=null;renderBracket();show('bracket');}});
+$('endGameBtn').addEventListener('click',()=>{
+ if(!play)return;
+ const m=state.matches[play.mi],tied=m.sa===m.sb;
+ const lead=tied?('tied '+m.sa+'–'+m.sb):(m.sa>m.sb?state.teams[m.a]+' '+m.sa+'–'+m.sb:state.teams[m.b]+' '+m.sb+'–'+m.sa);
+ const winName=state.teams[m.sa>=m.sb?m.a:m.b];
+ let msg=(play.mi===4?'End the FINAL now and crown the champion':'End this match now and take the current score')+'?\n\nScore: '+lead+'\nWinner: '+winName;
+ if(tied)msg+='\n(Tie → '+winName+' takes it.)';
+ if(confirm(msg))endMatch(true);});
 $('undoBtn').addEventListener('click',undoLast);
 $('exportBtn').addEventListener('click',exportCSV);
 $('resetBtn').addEventListener('click',()=>{
