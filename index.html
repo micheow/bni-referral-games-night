@@ -437,10 +437,14 @@ function buildPoolQueue(questions){
  return shuffle(capped).concat(shuffle(reserve));
 }
 function freshState(teams,questions,timer,perTeam){
+ const q0=shuffle(questions.map((_,i)=>i).filter(i=>questions[i].owner!=null&&(questions[i].type||'mcq')!=='open'));
+ const pool0=buildPoolQueue(questions);
+ const open0=shuffle(questions.map((_,i)=>i).filter(i=>(questions[i].type||'mcq')==='open'));
  return {teams,timerSecs:timer,perTeam,questions,
-  queue:shuffle(questions.map((_,i)=>i).filter(i=>questions[i].owner!=null&&(questions[i].type||'mcq')!=='open')),
-  poolQueue:buildPoolQueue(questions),
-  openQueue:shuffle(questions.map((_,i)=>i).filter(i=>(questions[i].type||'mcq')==='open')),
+  /* live working queues + immutable starting snapshots, so a match restart/replay
+     (or recovery after an accidental reload) can rebuild the exact remaining pool */
+  queue:q0.slice(), poolQueue:pool0.slice(), openQueue:open0.slice(),
+  queue0:q0, poolQueue0:pool0, openQueue0:open0,
   byeTeam:null,results:[],
   matches:[
    {name:'Round 1 · Match 1',a:0,b:1,sa:0,sb:0,done:false,winner:null},
@@ -451,6 +455,17 @@ function freshState(teams,questions,timer,perTeam){
    {name:'Sudden Death',a:null,b:null,sa:0,sb:0,done:false,winner:null},
    {name:'Sudden Death 1',a:null,b:null,sa:0,sb:0,done:false,winner:null}]};
 }
+/* Rebuild the working queues from the starting snapshots, removing only the
+   questions already ANSWERED in other still-completed matches. Lets the match
+   being (re)started reclaim its own questions and recover cleanly after a reload. */
+function rebuildQueues(){
+ if(!state.queue0)return; /* legacy save without snapshots — leave as-is */
+ const used=new Set();
+ state.matches.forEach(mm=>{ if(mm.done&&mm.usedQ)mm.usedQ.forEach(qi=>used.add(qi)); });
+ state.queue=state.queue0.filter(i=>!used.has(i));
+ state.poolQueue=state.poolQueue0.filter(i=>!used.has(i));
+ state.openQueue=state.openQueue0.filter(i=>!used.has(i));
+}
 function save(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}}
 function load(){try{const o=JSON.parse(localStorage.getItem(LS));
  if(o&&o.matches&&o.matches.length===5)o.matches.push({name:'Sudden Death',a:null,b:null,sa:0,sb:0,done:false,winner:null});
@@ -458,6 +473,10 @@ function load(){try{const o=JSON.parse(localStorage.getItem(LS));
  if(o&&!o.openQueue)o.openQueue=[];
  if(o&&!o.poolQueue&&o.questions){o.poolQueue=buildPoolQueue(o.questions);
   o.queue=o.queue.filter(i=>o.questions[i].owner!=null);} /* keep Round-1 queue team-owned only */
+ if(o&&o.questions&&!o.queue0){ /* backfill snapshots so restart/replay recovery works */
+  o.queue0=shuffle(o.questions.map((_,i)=>i).filter(i=>o.questions[i].owner!=null&&(o.questions[i].type||'mcq')!=='open'));
+  o.poolQueue0=buildPoolQueue(o.questions);
+  o.openQueue0=shuffle(o.questions.map((_,i)=>i).filter(i=>(o.questions[i].type||'mcq')==='open'));}
  return o;}catch(e){return null;}}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function $(id){return document.getElementById(id);}
@@ -721,7 +740,8 @@ function initSetup(){
 function updateBracketLogic(){
  const sf=[state.matches[0],state.matches[1],state.matches[2]];
  const dec=state.matches[5],duel=state.matches[6];
- const wipe=m=>{m.a=null;m.b=null;m.sa=0;m.sb=0;m.done=false;m.winner=null;};dec.name='Sudden Death';
+ const wipe=m=>{m.a=null;m.b=null;m.sa=0;m.sb=0;m.done=false;m.winner=null;};
+ if(dec.a==null)dec.name='Sudden Death'; /* don't clobber a promoted 'Sudden Death 2' label */
  if(!sf.every(m=>m.done)){wipe(dec);wipe(duel);return;}
  /* regulation score & margin: sudden-death points never count toward bye ranking */
  const winners=sf.map(m=>{
@@ -820,14 +840,16 @@ function clickMatch(i){
 /* ================= MATCH PLAY ================= */
 function startMatch(mi){
  const m=state.matches[mi];
- m.sa=0;m.sb=0;m.done=false;m.winner=null;m.regA=null;m.regB=null;
- const wipeM=x=>{const d=state.matches[x];d.a=null;d.b=null;d.sa=0;d.sb=0;d.done=false;d.winner=null;};
- if(mi===3)state.matches[4].b=null;
+ m.sa=0;m.sb=0;m.done=false;m.winner=null;m.regA=null;m.regB=null;m.usedQ=[];
+ const wipeM=x=>{const d=state.matches[x];d.a=null;d.b=null;d.sa=0;d.sb=0;d.done=false;d.winner=null;d.usedQ=[];};
+ /* replaying the Semi must force the Final to be re-contested (else a stale champion lingers) */
+ if(mi===3){const fi=state.matches[4];fi.a=null;fi.b=null;fi.sa=0;fi.sb=0;fi.done=false;fi.winner=null;fi.regA=null;fi.regB=null;fi.usedQ=[];}
  if(mi<3||mi>=5){const po=state.matches[3],fi=state.matches[4];
-  po.done=false;po.sa=0;po.sb=0;po.winner=null;po.a=null;po.b=null;
-  fi.done=false;fi.winner=null;fi.a=null;fi.b=null;state.byeTeam=null;}
+  po.done=false;po.sa=0;po.sb=0;po.winner=null;po.a=null;po.b=null;po.usedQ=[];
+  fi.done=false;fi.winner=null;fi.a=null;fi.b=null;fi.usedQ=[];state.byeTeam=null;}
  if(mi<3){wipeM(5);wipeM(6);}
  if(mi===6)wipeM(5);
+ rebuildQueues(); /* restore the correct remaining pool for this (re)started match */
  play={mi,asked:[0,0],openAsked:[0,0],quota:mi>=5?1:(mi<3?SETTINGS.round1PerTeam:SETTINGS.poolPerTeam),qIdx:null,phase:'idle',turn:0,hist:[[],[]],histO:[[],[]]};
  $('matchLabel').textContent=m.name;
  $('endGameBtn').classList.toggle('hidden',mi!==4); /* early-end only in the Final */
@@ -912,7 +934,7 @@ function nextQuestion(){
   else if(qOwner!=null&&qOwner!==myIdx)fromHTML=esc(state.teams[qOwner]);
   $('turnBanner').innerHTML='🎯 '+teamB+', '+(fromHTML?'a question from <b>'+fromHTML+'</b>':'your question');
  }
- $('qNum').textContent='Question '+(play.asked[0]+play.asked[1]+1)+' of '+(play.quota*2+(play.mi===4&&state.openQueue.length?4:0));
+ $('qNum').textContent='Question '+(play.asked[0]+play.asked[1]+1)+' of '+(play.quota*2);
  const qw=$('qWrap');qw.style.animation='none';qw.classList.remove('sweep');void qw.offsetWidth;
  qw.style.animation='slidein .4s ease';qw.classList.add('sweep');
  $('qText').textContent=q.q;
@@ -961,6 +983,7 @@ function reveal(i){
   $('turnBanner').innerHTML=i>=0?'❌ <b>Wrong!</b> The correct answer flashes green':'⏰ <b>Time\'s up!</b> Correct answer shown';}
  play.hist[play.turn][play.asked[play.turn]]=ok;
  play.asked[play.turn]++;
+ (m.usedQ=m.usedQ||[]).push(play.qIdx);
  play.last={kind:'mcq',turn:play.turn,qIdx:play.qIdx,delta:ok?1:0};
  $('nextBtn').classList.remove('hidden');$('skipBtn').classList.add('hidden');
  $('undoBtn').classList.remove('hidden');
@@ -1006,6 +1029,7 @@ function awardOpen(p){
  play.histO[play.turn][play.openAsked[play.turn]]=p>0;
  play.openAsked[play.turn]++;
  play.phase='revealed';
+ (m.usedQ=m.usedQ||[]).push(play.qIdx);
  for(let k=0;k<4;k++){const c=$('ochip'+k);if(c){c.classList.toggle('sel',k===p);c.classList.toggle('dim',k!==p);}}
  play.last={kind:'open',turn:play.turn,qIdx:play.qIdx,delta:p};
  if(p>0){snd('correct');burst(110+p*40);}else snd('wrong');
@@ -1054,6 +1078,7 @@ function undoLast(){
  if(!play||play.phase!=='revealed'||!play.last)return;
  const L=play.last,m=state.matches[play.mi];
  if(L.turn===0)m.sa-=L.delta;else m.sb-=L.delta;
+ if(m.usedQ){const ix=m.usedQ.lastIndexOf(L.qIdx);if(ix>=0)m.usedQ.splice(ix,1);}
  if(L.kind==='mcq'){
   play.asked[L.turn]--;
   play.hist[L.turn].length=Math.max(0,play.hist[L.turn].length-1);
@@ -1096,7 +1121,7 @@ function startTimer(secs){
     $('turnBanner').innerHTML='⏰ <b>Time!</b> Host, award the points';}
    else lockAnswer(-1);}},1000);
 }
-function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}}
+function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}const c=$('clock');if(c)c.classList.remove('low');}
 function renderTimer(){
  const c=$('clock');
  $('timerText').textContent=timerBase>=60?(Math.floor(tLeft/60)+':'+String(tLeft%60).padStart(2,'0')):tLeft;
@@ -1172,7 +1197,7 @@ document.addEventListener('keydown',e=>{
  else if(e.key>='1'&&e.key<='4'&&play.phase==='open')lockAnswer(+e.key-1);
  else if((e.key==='s'||e.key==='S')&&play.phase==='open')skipQ();
  else if((e.key==='u'||e.key==='U')&&play.phase==='revealed')undoLast();
- else if((e.key==='n'||e.key==='N'||e.key===' ')&&play.phase==='revealed'){e.preventDefault();nextQuestion();}});
+ else if((e.key==='n'||e.key==='N'||e.key===' '||e.key==='Enter')&&play.phase==='revealed'){e.preventDefault();nextQuestion();}});
 addEventListener('resize',()=>requestAnimationFrame(drawFlow));
 initSetup();
 </script>
