@@ -266,8 +266,10 @@ input:focus{outline:2px solid var(--gold)}
 .chips{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
 .chip{width:62px;height:62px;border-radius:50%;font-size:24px;font-family:'Cinzel',Georgia,serif;font-weight:800;
  background:linear-gradient(180deg,#234f9e,#122c63);border:1.5px solid rgba(169,194,239,.45);color:var(--txt)}
-.chip:hover{background:linear-gradient(180deg,#ffe9a8,#f5c542 48%,#e09b12);color:#231500;border-color:#ffedb6;
+.chip:hover,.chip.sel{background:linear-gradient(180deg,#ffe9a8,#f5c542 48%,#e09b12);color:#231500;border-color:#ffedb6;
  box-shadow:0 8px 24px rgba(245,197,66,.5)}
+.chip.sel{transform:scale(1.12);box-shadow:0 0 0 3px rgba(255,237,182,.6),0 8px 26px rgba(245,197,66,.7)}
+.chip.dim{opacity:.32}
 /* ---------- winner overlay ---------- */
 #overlay{position:fixed;inset:0;background:rgba(1,4,12,.93);z-index:500;display:flex;
  align-items:center;justify-content:center;animation:fadein .4s;overflow:hidden}
@@ -982,7 +984,7 @@ function nextOpenQuestion(){
   '<div class="openlbl">'+(q.img?'🎤 Perform their 20-second presentation from memory — more accurate &amp; complete earns more points':'🎤 Give your best answer! More accurate and complete answers earn more points')+'</div>'+
   (q.answer?'<button class="btn ghost" id="revealBtn">Reveal suggested answer</button><div id="modelAns" class="hidden"></div>':'')+
   '<div class="chiplbl">Award points (keys 0–3)</div>'+
-  '<div class="chips">'+[0,1,2,3].map(p=>'<button class="chip" onclick="awardOpen('+p+')">'+p+'</button>').join('')+'</div></div>';
+  '<div class="chips">'+[0,1,2,3].map(p=>'<button class="chip" id="ochip'+p+'" onclick="awardOpen('+p+')">'+p+'</button>').join('')+'</div></div>';
  if(q.answer){$('modelAns').textContent=q.answer;
   $('revealBtn').addEventListener('click',()=>{$('modelAns').classList.remove('hidden');$('revealBtn').classList.add('hidden');});}
  $('nextBtn').classList.add('hidden');$('skipBtn').classList.remove('hidden');
@@ -1002,6 +1004,7 @@ function awardOpen(p){
  play.histO[play.turn][play.openAsked[play.turn]]=p>0;
  play.openAsked[play.turn]++;
  play.phase='revealed';
+ for(let k=0;k<4;k++){const c=$('ochip'+k);if(c){c.classList.toggle('sel',k===p);c.classList.toggle('dim',k!==p);}}
  play.last={kind:'open',turn:play.turn,qIdx:play.qIdx,delta:p};
  if(p>0){snd('correct');burst(110+p*40);}else snd('wrong');
  $('turnBanner').innerHTML='⭐ <b>'+p+' point'+(p===1?'':'s')+'</b> to '+esc(teamOf(play.turn));
