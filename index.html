@@ -390,7 +390,7 @@ input:focus{outline:2px solid var(--gold)}
  <div id="qWrap" class="hex"><div class="hx"><div class="hi" id="qText"></div></div></div>
  <div class="answers" id="answers"></div>
  <div class="gctrl">
-  <button class="btn gold pulse hidden" id="startTimerBtn">&#9654; Start 30s timer</button>
+  <button class="btn gold pulse hidden" id="startTimerBtn">&#9654; Start Timer</button>
   <button class="btn" id="skipBtn">&#9197; Skip</button>
   <button class="btn gold hidden" id="nextBtn">Next question &rarr;</button>
   <button class="btn ghost hidden" id="undoBtn">&#8617; Undo</button>
@@ -1077,8 +1077,7 @@ function primeTimer(secs){
  stopTimer();timerBase=secs;tLeft=secs;renderTimer();
  if(play)play.timerStarted=false;
  $('clock').classList.add('primed');
- const lbl=(secs>=60&&secs%60===0)?(secs/60+' min'):(secs+'s');
- $('startTimerBtn').innerHTML='&#9654; Start '+lbl+' timer';
+ $('startTimerBtn').innerHTML='&#9654; Start Timer';
  $('startTimerBtn').classList.remove('hidden');
 }
 function beginTimer(){
