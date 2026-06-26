@@ -170,6 +170,7 @@ button:active{transform:translateY(1px) scale(.98)}
  background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);transition:left .5s ease}
 .btn:hover::after{left:130%}
 .btn:hover{border-color:var(--silver);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 10px 28px rgba(40,90,190,.55)}
+.btn.small{padding:7px 14px;font-size:10.5px;letter-spacing:.8px;box-shadow:none}
 .btn.gold{background:linear-gradient(180deg,#ffe9a8 0%,#f5c542 48%,#e09b12 100%);color:#231500;
  border:1px solid #ffedb6;text-shadow:0 1px 0 rgba(255,255,255,.35);
  box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 8px 26px rgba(245,197,66,.42);
@@ -393,7 +394,7 @@ input:focus{outline:2px solid var(--gold)}
   <button class="btn" id="skipBtn">&#9197; Skip</button>
   <button class="btn gold hidden" id="nextBtn">Next question &rarr;</button>
   <button class="btn ghost hidden" id="undoBtn">&#8617; Undo</button>
-  <button class="btn danger" id="endGameBtn">&#127937; End &amp; take score</button>
+  <button class="btn danger small hidden" id="endGameBtn">&#127937; End &amp; take score</button>
   <button class="btn ghost" id="quitBtn">Exit to Main</button>
  </div>
  <p class="kbd">Host keys: <span>Space</span> start timer &middot; <span>1</span>&ndash;<span>4</span> lock answer &middot; <span>S</span> skip &middot; <span>U</span> undo &middot; <span>N</span>/<span>Space</span> next</p>
@@ -829,6 +830,7 @@ function startMatch(mi){
  if(mi===6)wipeM(5);
  play={mi,asked:[0,0],openAsked:[0,0],quota:mi>=5?1:(mi<3?SETTINGS.round1PerTeam:SETTINGS.poolPerTeam),qIdx:null,phase:'idle',turn:0,hist:[[],[]],histO:[[],[]]};
  $('matchLabel').textContent=m.name;
+ $('endGameBtn').classList.toggle('hidden',mi!==4); /* early-end only in the Final */
  show('game');nextQuestion();
 }
 function teamOf(side){const m=state.matches[play.mi];return state.teams[side===0?m.a:m.b];}
