@@ -991,14 +991,13 @@ function nextOpenQuestion(){
  $('undoBtn').classList.add('hidden');play.last=null;
  fitText($('qText'),15);
  updatePanels();
- /* open round is host-judged with no countdown — show a mic in the clock */
- stopTimer();$('startTimerBtn').classList.add('hidden');
- const ck=$('clock');ck.classList.remove('low','primed');ck.style.setProperty('--p',100);$('timerText').textContent='🎤';
+ /* open round: host starts a 1-minute clock for the performance */
+ primeTimer(60);
  save();
 }
 function awardOpen(p){
  if(!play||play.phase!=='openq')return;
- stopTimer();
+ stopTimer();$('startTimerBtn').classList.add('hidden');$('clock').classList.remove('primed');
  const m=state.matches[play.mi];
  if(play.turn===0)m.sa+=p;else m.sb+=p;
  play.histO[play.turn][play.openAsked[play.turn]]=p>0;
@@ -1075,10 +1074,12 @@ function primeTimer(secs){
  stopTimer();timerBase=secs;tLeft=secs;renderTimer();
  if(play)play.timerStarted=false;
  $('clock').classList.add('primed');
+ const lbl=(secs>=60&&secs%60===0)?(secs/60+' min'):(secs+'s');
+ $('startTimerBtn').innerHTML='&#9654; Start '+lbl+' timer';
  $('startTimerBtn').classList.remove('hidden');
 }
 function beginTimer(){
- if(!play||play.phase!=='open'||play.timerStarted)return;
+ if(!play||(play.phase!=='open'&&play.phase!=='openq')||play.timerStarted)return;
  play.timerStarted=true;
  $('startTimerBtn').classList.add('hidden');
  $('clock').classList.remove('primed');
@@ -1157,7 +1158,7 @@ document.addEventListener('keydown',e=>{
   return;}
  if($('game').classList.contains('hidden')||!play)return;
  if(play.phase==='openq'&&e.key>='0'&&e.key<='3')awardOpen(+e.key);
- else if((e.key===' '||e.key==='Enter')&&play.phase==='open'&&!play.timerStarted){e.preventDefault();beginTimer();}
+ else if((e.key===' '||e.key==='Enter')&&(play.phase==='open'||play.phase==='openq')&&!play.timerStarted){e.preventDefault();beginTimer();}
  else if(e.key>='1'&&e.key<='4'&&play.phase==='open')lockAnswer(+e.key-1);
  else if((e.key==='s'||e.key==='S')&&play.phase==='open')skipQ();
  else if((e.key==='u'||e.key==='U')&&play.phase==='revealed')undoLast();
