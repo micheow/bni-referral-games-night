@@ -212,6 +212,10 @@ button:active{transform:translateY(1px) scale(.98)}
 .judgebtn.ok{background:linear-gradient(180deg,#3bf08a,#15b85e 52%,#0a7a3c);color:#03210f}
 .judgebtn.bad{background:linear-gradient(180deg,#ff6f80,#e0344c 52%,#9c0f24)}
 .judgebtn.pulse{animation:btnpulse 1.1s ease-in-out infinite}
+.rehearsechip{position:fixed;top:12px;right:14px;z-index:6;font-family:inherit;font-size:11px;
+ letter-spacing:.5px;padding:5px 12px;border-radius:999px;background:rgba(10,24,58,.55);
+ border:1px solid rgba(169,194,239,.22);color:var(--mut);cursor:pointer;opacity:.7}
+.rehearsechip:hover{opacity:1;color:var(--txt);border-color:var(--silver)}
 .card{background:rgba(8,22,54,.78);border:1px solid rgba(169,194,239,.18);
  border-radius:18px;padding:24px 30px;margin:0 auto 18px;width:100%;max-width:880px;
  box-shadow:0 16px 44px rgba(0,0,0,.5)}
@@ -384,6 +388,7 @@ input:focus{outline:2px solid var(--gold)}
 </div>
 <!-- ============ BRACKET ============ -->
 <div id="bracket" class="screen hidden">
+ <button class="rehearsechip" id="rehearseBtn" title="Rehearsal: jump straight into the Semi-Final / Final">&#127916; Rehearse</button>
  <h1 class="logo">Tournament Bracket</h1>
  <p class="sub">Highest-scoring Round 1 winner advances straight to the Final &middot; Round 1 uses opponents&rsquo; questions</p>
  <div id="champBox"></div>
@@ -397,7 +402,6 @@ input:focus{outline:2px solid var(--gold)}
  <div class="toolbar">
   <button class="btn" id="exportBtn">&#11015; Export results</button>
   <button class="btn ghost" id="poolBtn"></button>
-  <button class="btn ghost small" id="rehearseBtn">&#127916; Rehearse Semi/Final</button>
   <button class="btn danger" id="resetBtn">Reset tournament</button>
  </div>
 </div>
@@ -453,15 +457,23 @@ function buildPoolQueue(questions){
  const pool=questions.map((_,i)=>i).filter(i=>questions[i].owner==null&&(questions[i].type||'mcq')!=='open');
  const groups={};
  pool.forEach(i=>{const g=questions[i].group||('#'+i);(groups[g]=groups[g]||[]).push(i);});
- const capped=[],reserve=[];
- Object.keys(groups).forEach(g=>{
-  const arr=groups[g];
-  /* preferred ("best") questions first, then the rest, so the 2 that land in
-     the capped pool are the ones that explain the business best */
-  const ordered=shuffle(arr.filter(i=>questions[i].pref)).concat(shuffle(arr.filter(i=>!questions[i].pref)));
-  ordered.forEach((qi,k)=>{(k<2?capped:reserve).push(qi);});
- });
- return shuffle(capped).concat(shuffle(reserve));
+ /* Rank each contributor's questions best/hardest-first: the curated "best" ones
+    (pref===1) lead, then unmarked, then the explicitly-weak (pref===0) last.
+    Shuffle within a tier so the exact pick varies between runs. (Array.sort is
+    stable, so the shuffle order is preserved inside each tier.) */
+ const tier=i=>{const p=questions[i].pref;return p===1?0:(p===0?2:1);};
+ Object.keys(groups).forEach(g=>{groups[g]=shuffle(groups[g].slice()).sort((a,b)=>tier(a)-tier(b));});
+ /* Round-robin across contributors: everyone's best question first, then everyone's
+    second-best, etc. With ~30 buzzer questions over ~30 members, the Semi + Final
+    together lead with ONE strong question from each person before anyone repeats —
+    so every member gets represented and the variety is maximised. */
+ const queue=[];let depth=0,added=true;
+ while(added){
+  added=false;
+  shuffle(Object.keys(groups)).forEach(g=>{if(groups[g][depth]!==undefined){queue.push(groups[g][depth]);added=true;}});
+  depth++;
+ }
+ return queue;
 }
 function freshState(teams,questions,timer,perTeam){
  const q0=shuffle(questions.map((_,i)=>i).filter(i=>questions[i].owner!=null&&(questions[i].type||'mcq')!=='open'));
@@ -488,7 +500,7 @@ function freshState(teams,questions,timer,perTeam){
 function rebuildQueues(){
  if(!state.queue0)return; /* legacy save without snapshots — leave as-is */
  const used=new Set();
- state.matches.forEach(mm=>{ if(mm.done&&mm.usedQ)mm.usedQ.forEach(qi=>used.add(qi)); });
+ state.matches.forEach(mm=>{ if(mm.done&&mm.usedQ&&!mm.rehearsal)mm.usedQ.forEach(qi=>used.add(qi)); });
  state.queue=state.queue0.filter(i=>!used.has(i));
  state.poolQueue=state.poolQueue0.filter(i=>!used.has(i));
  state.openQueue=state.openQueue0.filter(i=>!used.has(i));
@@ -863,7 +875,7 @@ function renderBracket(){
    return;}
   $('m'+i).innerHTML=matchHTML(m,i);});
  const fi=state.matches[4],cb=$('champBox');
- cb.innerHTML=fi.done?'<div class="champbox"><div class="lbl">🏆 CHAMPION 🏆</div><div class="nm">'+esc(state.teams[fi.winner])+'</div></div>':'';
+ cb.innerHTML=(fi.done&&!fi.rehearsal)?'<div class="champbox"><div class="lbl">🏆 CHAMPION 🏆</div><div class="nm">'+esc(state.teams[fi.winner])+'</div></div>':'';
  $('poolBtn').textContent='🗂 '+(state.queue.length+(state.poolQueue?state.poolQueue.length:0))+' questions left in pool';
  /* rehearsal shortcut is only offered before Round 1 is settled (so it can't
     clobber the real Semi/Final once teams have actually advanced) */
@@ -878,7 +890,7 @@ function renderBracket(){
    match rebuilds the bracket from the actual results. */
 function rehearse(){
  if(!state){alert('Press “Start tournament” first.');return;}
- const seed=(mi,a,b)=>{const m=state.matches[mi];m.a=a;m.b=b;m.sa=0;m.sb=0;m.done=false;m.winner=null;m.regA=null;m.regB=null;m.usedQ=[];};
+ const seed=(mi,a,b)=>{const m=state.matches[mi];m.a=a;m.b=b;m.sa=0;m.sb=0;m.done=false;m.winner=null;m.regA=null;m.regB=null;m.usedQ=[];m.rehearsal=true;};
  seed(3,0,1); /* Semi-Final: Team Henry vs Team Stacey */
  seed(4,2,3); /* Final: Team William vs Team Winston */
  renderBracket();
@@ -898,8 +910,8 @@ function startMatch(mi){
  /* replaying the Semi must force the Final to be re-contested (else a stale champion lingers) */
  if(mi===3&&state.matches[0].done&&state.matches[1].done&&state.matches[2].done){const fi=state.matches[4];fi.a=null;fi.b=null;fi.sa=0;fi.sb=0;fi.done=false;fi.winner=null;fi.regA=null;fi.regB=null;fi.usedQ=[];}
  if(mi<3||mi>=5){const po=state.matches[3],fi=state.matches[4];
-  po.done=false;po.sa=0;po.sb=0;po.winner=null;po.a=null;po.b=null;po.usedQ=[];
-  fi.done=false;fi.winner=null;fi.a=null;fi.b=null;fi.usedQ=[];state.byeTeam=null;}
+  po.done=false;po.sa=0;po.sb=0;po.winner=null;po.a=null;po.b=null;po.usedQ=[];po.rehearsal=false;
+  fi.done=false;fi.winner=null;fi.a=null;fi.b=null;fi.usedQ=[];fi.rehearsal=false;state.byeTeam=null;}
  if(mi<3){wipeM(5);wipeM(6);}
  if(mi===6)wipeM(5);
  rebuildQueues(); /* restore the correct remaining pool for this (re)started match */
@@ -1346,7 +1358,8 @@ function endMatch(forced){
  m.winner=m.sa>=m.sb?m.a:m.b;
  if(m.sa===m.sb&&forced)m.winner=m.a;
  if(play.mi===5)state.byeTeam=m.winner;
- state.results.push({match:m.name,teamA:state.teams[m.a],scoreA:m.sa,
+ if(m.rehearsal)rebuildQueues(); /* rehearsal: don't record a result, and give back the questions it used */
+ else state.results.push({match:m.name,teamA:state.teams[m.a],scoreA:m.sa,
   teamB:state.teams[m.b],scoreB:m.sb,winner:state.teams[m.winner],
   when:new Date().toLocaleString()});
  save();
@@ -1381,7 +1394,7 @@ $('skipBtn').addEventListener('click',skipQ);
 $('nextBtn').addEventListener('click',()=>{if(play&&play.phase==='revealed')nextQuestion();});
 $('quitBtn').addEventListener('click',()=>{
  if(confirm('Exit this match? Its progress will be lost (questions used stay used).')){
-  stopTimer();play=null;renderBracket();show('bracket');}});
+  stopTimer();if(play&&state.matches[play.mi].rehearsal)rebuildQueues();play=null;renderBracket();show('bracket');}});
 $('endGameBtn').addEventListener('click',()=>{
  if(!play)return;
  const m=state.matches[play.mi],tied=m.sa===m.sb;
