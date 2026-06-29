@@ -1126,7 +1126,9 @@ function startAnswer(side){
 /* host taps the option the team gave: correct = +1, wrong = −1 (auto). On a miss,
    the other team can be given the question via the GO button. */
 function pickBuzz(i){
- if(!play||play.phase!=='buzzanswer')return;
+ if(!play)return;
+ if(play.phase==='buzzgo')goSecond(); /* tapping an answer in the GO state auto-starts the 2nd team, then scores it */
+ if(play.phase!=='buzzanswer')return;
  stopTimer();
  const q=state.questions[play.qIdx],m=state.matches[play.mi],side=play.turn,ok=(i===q.correct),delta=ok?1:-1;
  if(side===0)m.sa+=delta;else m.sb+=delta;
@@ -1510,6 +1512,7 @@ document.addEventListener('keydown',e=>{
    if(e.key>='1'&&e.key<='4'){e.preventDefault();pickBuzz(+e.key-1);return;}
    if(e.key==='0'||e.key==='x'||e.key==='X'){e.preventDefault();buzzNoAnswer();return;}
   }else if(play.phase==='buzzgo'){
+   if(e.key>='1'&&e.key<='4'){e.preventDefault();pickBuzz(+e.key-1);return;} /* auto-starts 2nd team + scores */
    if(e.key==='g'||e.key==='G'||e.key==='a'||e.key==='A'||e.key==='b'||e.key==='B'){e.preventDefault();goSecond();return;}
   }
  }
