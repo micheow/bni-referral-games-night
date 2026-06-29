@@ -1118,8 +1118,8 @@ function startAnswer(side){
  $('turnBanner').innerHTML='⏱ <b style="color:'+accent+'">'+esc(teamOf(side))+'</b> — tap the answer they give · '+SETTINGS.buzzSecs+'s';
  snd('lockin');
  armBuzzOptions(true);
- $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="judgebtn bad" onclick="buzzNoAnswer()">⏰ No answer (−1)</button></div>';
- setKbd('Tap their answer · <span>1</span>–<span>4</span> · <span>0</span> no answer · clock auto-ends');
+ $('buzzCtrl').innerHTML=''; /* no "No answer" button — the 10s clock auto-ends as −1 */
+ setKbd('Tap the answer they give · <span>1</span>–<span>4</span> · clock runs out = −1');
  startTimer(SETTINGS.buzzSecs);
  updatePanels();save();
 }
