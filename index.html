@@ -216,6 +216,9 @@ button:active{transform:translateY(1px) scale(.98)}
  letter-spacing:.5px;padding:5px 12px;border-radius:999px;background:rgba(10,24,58,.55);
  border:1px solid rgba(169,194,239,.22);color:var(--mut);cursor:pointer;opacity:.7}
 .rehearsechip:hover{opacity:1;color:var(--txt);border-color:var(--silver)}
+.ans.pick{cursor:pointer}
+.ans.pick:hover .hx{filter:brightness(1.16);transform:translateY(-2px)}
+.ans.elim{opacity:.34;filter:grayscale(.55);pointer-events:none}
 .card{background:rgba(8,22,54,.78);border:1px solid rgba(169,194,239,.18);
  border-radius:18px;padding:24px 30px;margin:0 auto 18px;width:100%;max-width:880px;
  box-shadow:0 16px 44px rgba(0,0,0,.5)}
@@ -453,26 +456,85 @@ const GROUP_TEAM={"Jason":0,"Dexton":0,"Zi Hao":1,"Stacey":1,"Nicholas":1,"Rae":
    front-loads at most 2 questions per contributor (so everyone gets a chance),
    with each contributor's extras held in a reserve that's only used if the
    capped pool runs out. */
+/* Difficulty heuristic (1=easy … 3=hard). Length isn't the driver — what makes a
+   question hard is how CLOSE the answer options are. We score textual answers by
+   how much vocabulary they share (similar options are harder to tell apart) and
+   numeric answers by how tight the spread is; "all/none of the above / A and B"
+   trap options nudge it up a notch. */
+function qDifficulty(q){
+ const opts=(q.a||[]).map(s=>String(s==null?'':s)).filter(s=>s!=='');
+ if(opts.length<2)return 1;
+ const nums=opts.map(s=>{const m=s.replace(/[,$\s]/g,'').match(/-?\d+(?:\.\d+)?/);return m?parseFloat(m[0]):null;});
+ if(nums.every(n=>n!=null)){
+  const mx=Math.max.apply(null,nums),mn=Math.min.apply(null,nums),mean=nums.reduce((a,b)=>a+b,0)/nums.length;
+  const spread=mean?Math.abs(mx-mn)/Math.abs(mean):0;
+  return spread<0.4?3:spread<1?2:1;
+ }
+ const sets=opts.map(s=>new Set(s.toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w.length>2)));
+ let tot=0,n=0;
+ for(let i=0;i<sets.length;i++)for(let j=i+1;j<sets.length;j++){
+  const A=sets[i],B=sets[j];if(!A.size&&!B.size)continue;
+  let inter=0;A.forEach(w=>{if(B.has(w))inter++;});
+  const uni=new Set([].concat([...A],[...B])).size||1;tot+=inter/uni;n++;
+ }
+ const sim=n?tot/n:0;
+ const trap=opts.some(s=>/all of the above|none of the above|both|a and b|all the above/i.test(s));
+ let d=sim>0.28?3:sim>0.12?2:1;
+ if(trap&&d<3)d++;
+ return d;
+}
+/* A "theme" signature so one repeated template can't dominate the buzzer set —
+   e.g. "Who is X's Golden Goose?" across ~17 members collapses to one theme.
+   Strip the member's name and common filler, then key on the salient words. */
+function qTheme(q){
+ let t=String(q.q||'').toLowerCase();
+ if(q.group)t=t.split(String(q.group).toLowerCase()).join(' ');
+ if(q.person)t=t.split(String(q.person).toLowerCase()).join(' ');
+ /* collapse the repetitive BNI templates regardless of exact phrasing, so e.g.
+    "Who is X's Golden Goose?" and "Which trade is X's Golden Goose?" count as one */
+ const KEY=['golden goose','ideal client','ideal customer','ideal referral','best referral','strongest usp','unique selling','power team','contact sphere'];
+ for(let k=0;k<KEY.length;k++){if(t.indexOf(KEY[k])>=0)return KEY[k];}
+ t=t.replace(/[^a-z ]/g,' ').replace(/\b(what|which|who|whose|is|are|the|a|an|of|to|for|in|on|s|his|her|their|its|most|best|do|does|did|you|your|not|be|with|and|or)\b/g,' ').replace(/\s+/g,' ').trim();
+ const words=t.split(' ').filter(Boolean);
+ return words.slice(0,4).sort().join(' ')||'misc';
+}
 function buildPoolQueue(questions){
  const pool=questions.map((_,i)=>i).filter(i=>questions[i].owner==null&&(questions[i].type||'mcq')!=='open');
  const groups={};
  pool.forEach(i=>{const g=questions[i].group||('#'+i);(groups[g]=groups[g]||[]).push(i);});
- /* Rank each contributor's questions best/hardest-first: the curated "best" ones
-    (pref===1) lead, then unmarked, then the explicitly-weak (pref===0) last.
-    Shuffle within a tier so the exact pick varies between runs. (Array.sort is
-    stable, so the shuffle order is preserved inside each tier.) */
+ /* Within each contributor: hardest first, then curated-"best" (pref) as a
+    tie-break. Shuffle first so equal-ranked questions vary between runs. */
  const tier=i=>{const p=questions[i].pref;return p===1?0:(p===0?2:1);};
- Object.keys(groups).forEach(g=>{groups[g]=shuffle(groups[g].slice()).sort((a,b)=>tier(a)-tier(b));});
- /* Round-robin across contributors: everyone's best question first, then everyone's
-    second-best, etc. With ~30 buzzer questions over ~30 members, the Semi + Final
-    together lead with ONE strong question from each person before anyone repeats —
-    so every member gets represented and the variety is maximised. */
- const queue=[];let depth=0,added=true;
- while(added){
-  added=false;
-  shuffle(Object.keys(groups)).forEach(g=>{if(groups[g][depth]!==undefined){queue.push(groups[g][depth]);added=true;}});
-  depth++;
- }
+ Object.keys(groups).forEach(g=>{
+  groups[g]=shuffle(groups[g].slice()).sort((a,b)=>(qDifficulty(questions[b])-qDifficulty(questions[a]))||(tier(a)-tier(b)));
+ });
+ /* Only the genuinely repetitive templates get capped (a theme that appears a lot
+    in the pool, e.g. golden goose ×17). Rare/unique themes are never capped, so
+    every contributor always has an available question and stays represented. */
+ const themeFreq={};
+ pool.forEach(i=>{const th=qTheme(questions[i]);themeFreq[th]=(themeFreq[th]||0)+1;});
+ const THEME_CAP=3,CAP_OVER=4;
+ const capped=th=>(themeFreq[th]||0)>CAP_OVER;
+ const themeCount={},used=new Set(),queue=[];
+ const pick=(g,force)=>{ /* take this contributor's best still-unused question */
+  const arr=groups[g];
+  for(let k=0;k<arr.length;k++){
+   const qi=arr[k];if(used.has(qi))continue;
+   const th=qTheme(questions[qi]);
+   if(!force&&capped(th)&&(themeCount[th]||0)>=THEME_CAP)continue;
+   used.add(qi);themeCount[th]=(themeCount[th]||0)+1;return qi;
+  }
+  return -1;
+ };
+ /* Coverage pass: guarantee EVERY contributor leads with one question (preferring
+    an uncapped theme; only forced onto a capped one if that's all they have) so
+    no member is ever squeezed out by the cap. */
+ shuffle(Object.keys(groups)).forEach(g=>{let qi=pick(g,false);if(qi<0)qi=pick(g,true);if(qi>=0)queue.push(qi);});
+ /* Fill passes: round-robin the remainder, now holding repeated templates to
+    THEME_CAP so the set isn't "all golden goose". */
+ let added=true;
+ while(added){added=false;shuffle(Object.keys(groups)).forEach(g=>{const qi=pick(g,false);if(qi>=0){queue.push(qi);added=true;}});}
+ pool.forEach(qi=>{if(!used.has(qi))queue.push(qi);}); /* append theme-capped overflow */
  return queue;
 }
 function freshState(teams,questions,timer,perTeam){
@@ -999,7 +1061,7 @@ function nextBuzz(){
 }
 function renderBuzzQuestion(){
  const q=state.questions[play.qIdx];
- play.phase='buzzwait';play.turn=-1;play.bzTried=[false,false];play.bzFirst=null;play.qDelta=[0,0];play.last=null;
+ play.phase='buzzwait';play.turn=-1;play.bzTried=[false,false];play.bzFirst=null;play.qDelta=[0,0];play.bzElim=[];play.last=null;
  snd('intro');
  $('turnBanner').innerHTML='🔔 <b>Buzz in!</b> First team to buzz answers · +1 if right, −1 if wrong';
  $('qNum').textContent='Question '+(play.bzAsked+1)+' of '+play.bzTotal+(play.mi>=5?' · Sudden Death':'');
@@ -1010,6 +1072,7 @@ function renderBuzzQuestion(){
   const d=document.createElement('div');d.className='ans hex';d.id='ans'+i;
   d.style.animation='slidein .45s ease '+(i*.08)+'s backwards';
   d.innerHTML='<div class="hx"><div class="hi"><span class="ltr">'+Ltr+':</span><span>'+esc(q.a[i])+'</span></div></div>';
+  d.addEventListener('click',()=>pickBuzz(i));
   an.appendChild(d);
  });
  renderBuzzBtns();
@@ -1031,32 +1094,36 @@ function renderBuzzBtns(){
   '<button class="buzzbtn teamA" onclick="buzzIn(0)">🔔 '+esc(state.teams[m.a])+'</button>'+
   '<button class="buzzbtn teamB" onclick="buzzIn(1)">🔔 '+esc(state.teams[m.b])+'</button></div>';
 }
+/* enable clicking the answer hexes for the team that's answering; an eliminated
+   option (a previous team's wrong pick) stays locked out so only the remaining
+   choices are pickable */
+function armBuzzOptions(on){
+ for(let i=0;i<4;i++){const el=$('ans'+i);if(!el)continue;
+  const elim=play.bzElim.indexOf(i)>=0;
+  el.classList.toggle('pick',on&&!elim);el.classList.toggle('elim',elim);}
+}
 function buzzIn(side){
- if(!play||!play.buzzer||play.phase!=='buzzwait'||play.bzTried[side])return;
+ if(!play||!play.buzzer)return;
+ if(play.phase==='buzzwait'){if(play.bzTried[side])return;}        /* first buzz: either team */
+ else if(play.phase==='buzzsteal'){if(side!==play.stealSide)return;} /* steal: only the other team */
+ else return;
  if(play.bzFirst==null)play.bzFirst=side;
  play.turn=side;play.phase='buzzanswer';
- const accent=side===0?'#f5c542':'#4dd7ff';
- $('turnBanner').innerHTML='⏱ <b style="color:'+accent+'">'+esc(teamOf(side))+'</b> buzzed — answer within '+SETTINGS.buzzSecs+'s!';
+ const accent=side===0?'#f5c542':'#4dd7ff',n=4-play.bzElim.length;
+ $('turnBanner').innerHTML='⏱ <b style="color:'+accent+'">'+esc(teamOf(side))+'</b> — tap the answer they give · '+n+' option'+(n===1?'':'s')+' · '+SETTINGS.buzzSecs+'s';
  snd('lockin');
- renderJudge();
- setKbd('Mark: <span>C</span> correct (+1) · <span>X</span> wrong (−1)');
+ armBuzzOptions(true);
+ $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="judgebtn bad" onclick="buzzNoAnswer()">⏰ No answer / wrong (−1)</button></div>';
+ setKbd('Tap their answer · <span>1</span>–<span>4</span> · <span>0</span> no answer');
  startTimer(SETTINGS.buzzSecs);
  updatePanels();save();
 }
-function renderJudge(){
- $('buzzCtrl').innerHTML='<div class="buzzrow">'+
-  '<button class="judgebtn ok" id="jOk" onclick="markBuzz(true)">✓ Correct (+1)</button>'+
-  '<button class="judgebtn bad" id="jBad" onclick="markBuzz(false)">✗ Wrong (−1)</button></div>';
-}
-function buzzTimeout(){
- snd('timeup');
- $('turnBanner').innerHTML='⏰ <b>Time’s up!</b> '+esc(teamOf(play.turn))+' — host, mark the result';
- const jb=$('jBad');if(jb)jb.classList.add('pulse');
-}
-function markBuzz(ok){
- if(!play||play.phase!=='buzzanswer')return;
+/* host taps the option the answering team actually gave; right = +1, wrong = −1
+   and that option is eliminated for the other team's steal */
+function pickBuzz(i){
+ if(!play||play.phase!=='buzzanswer'||play.bzElim.indexOf(i)>=0)return;
  stopTimer();
- const m=state.matches[play.mi],side=play.turn,delta=ok?1:-1;
+ const q=state.questions[play.qIdx],m=state.matches[play.mi],side=play.turn,ok=(i===q.correct),delta=ok?1:-1;
  play.bzTried[side]=true;
  if(side===0)m.sa+=delta;else m.sb+=delta;
  play.qDelta[side]+=delta;
@@ -1066,27 +1133,47 @@ function markBuzz(ok){
   $('turnBanner').innerHTML='✨ <b>CORRECT!</b> +1 to '+esc(teamOf(side));
   finishBuzzQuestion();
  }else{
-  const other=1-side;
-  if(!play.bzTried[other]){
-   snd('wrong');
-   $('turnBanner').innerHTML='❌ <b>Wrong</b> (−1 to '+esc(teamOf(side))+'). <b>'+esc(teamOf(other))+'</b> — your chance!';
-   play.turn=other;play.phase='buzzanswer';
-   renderJudge();
-   setKbd('Mark: <span>C</span> correct (+1) · <span>X</span> wrong (−1)');
-   startTimer(SETTINGS.buzzSecs);
-   updatePanels();save();
-   return;
-  }
   snd('wrong');
-  revealBuzzAnswer();
-  $('turnBanner').innerHTML='❌ <b>Wrong</b> (−1). The correct answer is shown';
-  finishBuzzQuestion();
+  play.bzElim.push(i);
+  const el=$('ans'+i);if(el){el.classList.remove('pick');el.classList.add('wrong','elim');}
+  const other=1-side;
+  if(!play.bzTried[other])beginSteal(other);
+  else{revealBuzzAnswer();$('turnBanner').innerHTML='❌ <b>Wrong</b> (−1). Correct answer shown';finishBuzzQuestion();}
  }
+ updatePanels();save();
+}
+function buzzNoAnswer(){
+ if(!play||play.phase!=='buzzanswer')return;
+ stopTimer();
+ const m=state.matches[play.mi],side=play.turn;
+ play.bzTried[side]=true;
+ if(side===0)m.sa-=1;else m.sb-=1;
+ play.qDelta[side]-=1;snd('wrong');
+ const other=1-side;
+ if(!play.bzTried[other])beginSteal(other);
+ else{revealBuzzAnswer();$('turnBanner').innerHTML='❌ <b>No answer</b> (−1). Correct answer shown';finishBuzzQuestion();}
+ updatePanels();save();
+}
+function buzzTimeout(){
+ snd('timeup');
+ $('turnBanner').innerHTML='⏰ <b>Time’s up!</b> No answer from '+esc(teamOf(play.turn));
+ buzzNoAnswer();
+}
+/* first team missed — hand the question to the other team, but WAIT for the host
+   to press that team's button, which restarts a fresh 10s clock */
+function beginSteal(other){
+ play.phase='buzzsteal';play.turn=-1;play.stealSide=other;
+ armBuzzOptions(false);
+ const accent=other===0?'#f5c542':'#4dd7ff',n=4-play.bzElim.length;
+ $('turnBanner').innerHTML='❌ Wrong (−1). <b style="color:'+accent+'">'+esc(teamOf(other))+'</b> — press to steal · '+n+' option'+(n===1?'':'s')+' left';
+ $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(other===0?'teamA':'teamB')+'" onclick="buzzIn('+other+')">🔔 '+esc(teamOf(other))+' — steal</button></div>';
+ setKbd('Press <span>'+(other===0?'A':'B')+'</span> to start the steal — resets the 10s');
+ stopTimer();timerBase=SETTINGS.buzzSecs;tLeft=SETTINGS.buzzSecs;renderTimer();$('clock').classList.remove('primed');
  updatePanels();save();
 }
 function revealBuzzAnswer(){
  const q=state.questions[play.qIdx];
- for(let k=0;k<4;k++){const el=$('ans'+k);if(el){el.classList.add('dead');if(k!==q.correct)el.classList.add('dim');}}
+ for(let k=0;k<4;k++){const el=$('ans'+k);if(el){el.classList.add('dead');el.classList.remove('pick');if(k!==q.correct)el.classList.add('dim');}}
  const ce=$('ans'+q.correct);if(ce){ce.classList.remove('dim');ce.classList.add('right');}
 }
 function finishBuzzQuestion(){
@@ -1422,8 +1509,10 @@ document.addEventListener('keydown',e=>{
    if(e.key==='b'||e.key==='B'){e.preventDefault();buzzIn(1);return;}
    if(e.key==='s'||e.key==='S'){e.preventDefault();skipQ();return;}
   }else if(play.phase==='buzzanswer'){
-   if(e.key==='c'||e.key==='C'){e.preventDefault();markBuzz(true);return;}
-   if(e.key==='x'||e.key==='X'||e.key==='w'||e.key==='W'){e.preventDefault();markBuzz(false);return;}
+   if(e.key>='1'&&e.key<='4'){e.preventDefault();pickBuzz(+e.key-1);return;}
+   if(e.key==='0'||e.key==='x'||e.key==='X'){e.preventDefault();buzzNoAnswer();return;}
+  }else if(play.phase==='buzzsteal'){
+   if(e.key==='a'||e.key==='A'||e.key==='b'||e.key==='B'){e.preventDefault();buzzIn(play.stealSide);return;}
   }
  }
  if(play.phase==='openq'&&e.key>='0'&&e.key<='3')awardOpen(+e.key);
