@@ -397,6 +397,7 @@ input:focus{outline:2px solid var(--gold)}
  <div class="toolbar">
   <button class="btn" id="exportBtn">&#11015; Export results</button>
   <button class="btn ghost" id="poolBtn"></button>
+  <button class="btn ghost small" id="rehearseBtn">&#127916; Rehearse Semi/Final</button>
   <button class="btn danger" id="resetBtn">Reset tournament</button>
  </div>
 </div>
@@ -864,8 +865,24 @@ function renderBracket(){
  const fi=state.matches[4],cb=$('champBox');
  cb.innerHTML=fi.done?'<div class="champbox"><div class="lbl">🏆 CHAMPION 🏆</div><div class="nm">'+esc(state.teams[fi.winner])+'</div></div>':'';
  $('poolBtn').textContent='🗂 '+(state.queue.length+(state.poolQueue?state.poolQueue.length:0))+' questions left in pool';
+ /* rehearsal shortcut is only offered before Round 1 is settled (so it can't
+    clobber the real Semi/Final once teams have actually advanced) */
+ const _r1done=state.matches[0].done&&state.matches[1].done&&state.matches[2].done;
+ const _rb=$('rehearseBtn');if(_rb)_rb.classList.toggle('hidden',_r1done);
  save();
  requestAnimationFrame(drawFlow);
+}
+/* Rehearsal shortcut: drop sample teams into the Semi-Final and Final so the host
+   can play either straight away (buzzer round, plus the open-ended round in the
+   Final) without first running Round 1. Self-cleaning — starting any real Round 1
+   match rebuilds the bracket from the actual results. */
+function rehearse(){
+ if(!state){alert('Press “Start tournament” first.');return;}
+ const seed=(mi,a,b)=>{const m=state.matches[mi];m.a=a;m.b=b;m.sa=0;m.sb=0;m.done=false;m.winner=null;m.regA=null;m.regB=null;m.usedQ=[];};
+ seed(3,0,1); /* Semi-Final: Team Henry vs Team Stacey */
+ seed(4,2,3); /* Final: Team William vs Team Winston */
+ renderBracket();
+ alert('Rehearsal ready ✓\n\nThe Semi-Final and Final now show PLAY — click either to test the buzzer round. The Final also runs the open-ended round at the end.\n\nThis is practice only; starting any Round 1 match clears it.');
 }
 function clickMatch(i){
  const m=state.matches[i];
@@ -879,7 +896,7 @@ function startMatch(mi){
  m.sa=0;m.sb=0;m.done=false;m.winner=null;m.regA=null;m.regB=null;m.usedQ=[];
  const wipeM=x=>{const d=state.matches[x];d.a=null;d.b=null;d.sa=0;d.sb=0;d.done=false;d.winner=null;d.usedQ=[];};
  /* replaying the Semi must force the Final to be re-contested (else a stale champion lingers) */
- if(mi===3){const fi=state.matches[4];fi.a=null;fi.b=null;fi.sa=0;fi.sb=0;fi.done=false;fi.winner=null;fi.regA=null;fi.regB=null;fi.usedQ=[];}
+ if(mi===3&&state.matches[0].done&&state.matches[1].done&&state.matches[2].done){const fi=state.matches[4];fi.a=null;fi.b=null;fi.sa=0;fi.sb=0;fi.done=false;fi.winner=null;fi.regA=null;fi.regB=null;fi.usedQ=[];}
  if(mi<3||mi>=5){const po=state.matches[3],fi=state.matches[4];
   po.done=false;po.sa=0;po.sb=0;po.winner=null;po.a=null;po.b=null;po.usedQ=[];
   fi.done=false;fi.winner=null;fi.a=null;fi.b=null;fi.usedQ=[];state.byeTeam=null;}
@@ -1375,6 +1392,7 @@ $('endGameBtn').addEventListener('click',()=>{
  if(confirm(msg))endMatch(true);});
 $('undoBtn').addEventListener('click',undoLast);
 $('exportBtn').addEventListener('click',exportCSV);
+$('rehearseBtn').addEventListener('click',rehearse);
 $('resetBtn').addEventListener('click',()=>{
  if(confirm('Reset the WHOLE tournament? Scores and bracket will be wiped.')){
   localStorage.removeItem(LS);location.reload();}});
