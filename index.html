@@ -219,6 +219,10 @@ button:active{transform:translateY(1px) scale(.98)}
 .ans.pick{cursor:pointer}
 .ans.pick:hover .hx{filter:brightness(1.16);transform:translateY(-2px)}
 .ans.elim{opacity:.34;filter:grayscale(.55);pointer-events:none}
+.sadj{display:flex;gap:7px;justify-content:center;margin-top:4px}
+.sadj button{font-family:inherit;cursor:pointer;width:28px;height:25px;border-radius:7px;padding:0;line-height:1;
+ background:rgba(10,24,58,.6);border:1px solid rgba(169,194,239,.28);color:var(--mut);font-size:16px;font-weight:700}
+.sadj button:hover{color:var(--txt);border-color:var(--acc);background:rgba(10,24,58,.9)}
 .card{background:rgba(8,22,54,.78);border:1px solid rgba(169,194,239,.18);
  border-radius:18px;padding:24px 30px;margin:0 auto 18px;width:100%;max-width:880px;
  box-shadow:0 16px 44px rgba(0,0,0,.5)}
@@ -411,13 +415,13 @@ input:focus{outline:2px solid var(--gold)}
 <!-- ============ GAME ============ -->
 <div id="game" class="screen hidden">
  <div class="topbar">
-  <div class="tp" id="pA"><div class="tname"></div><div class="tscore">0</div><div class="dots"></div></div>
+  <div class="tp" id="pA"><div class="tname"></div><div class="tscore">0</div><div class="sadj"><button onclick="adjScore(0,-1)" title="−1">&minus;</button><button onclick="adjScore(0,1)" title="+1">+</button></div><div class="dots"></div></div>
   <div class="mid">
    <div id="matchLabel"></div>
    <div id="clock"><div class="cin"><span id="timerText">30</span></div></div>
    <div id="qNum"></div>
   </div>
-  <div class="tp" id="pB"><div class="tname"></div><div class="tscore">0</div><div class="dots"></div></div>
+  <div class="tp" id="pB"><div class="tname"></div><div class="tscore">0</div><div class="sadj"><button onclick="adjScore(1,-1)" title="−1">&minus;</button><button onclick="adjScore(1,1)" title="+1">+</button></div><div class="dots"></div></div>
  </div>
  <div id="turnBanner"></div>
  <div id="qWrap" class="hex"><div class="hx"><div class="hi" id="qText"></div></div></div>
@@ -583,6 +587,7 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 function $(id){return document.getElementById(id);}
 function show(id){['setup','bracket','game'].forEach(s=>$(s).classList.toggle('hidden',s!==id));}
  function setKbd(html){const k=$('kbdHint');if(k)k.innerHTML=html;}
+ function adjScore(side,delta){if(!play)return;const m=state.matches[play.mi];if(side===0)m.sa+=delta;else m.sb+=delta;updatePanels();save();}
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 function fitText(el,min,target){
  const t=target||el;
@@ -841,7 +846,7 @@ function initSetup(){
   '<b style="color:var(--gold)">'+esc(BAKED.teams[p[0]])+'</b> '+
   '<span style="color:var(--mut)">vs</span> '+
   '<b style="color:var(--silver)">'+esc(BAKED.teams[p[1]])+'</b></div>';}).join('');
- $('bankNote').innerHTML=BAKED.q.length+' questions in the bank.<br>Round 1: '+SETTINGS.round1PerTeam+' questions per team ('+SETTINGS.timerSecs+'s each — host starts the clock once the question is read; each team faces its opponent’s questions).<br>Semi-Final &amp; Final: '+SETTINGS.sharedQ+' shared <b>buzzer</b> questions — first team to buzz answers within '+SETTINGS.buzzSecs+'s, <b>+1</b> if right and <b>−1</b> if wrong; if wrong, the other team gets a chance. The Final then adds '+(SETTINGS.openPerTeam*2)+' open-ended questions ('+SETTINGS.openPerTeam+' per team) — each team performs a member’s 20-second presentation from a photo (host scores 0–3).';
+ $('bankNote').innerHTML=BAKED.q.length+' questions in the bank.<br>Round 1: '+SETTINGS.round1PerTeam+' questions per team ('+SETTINGS.timerSecs+'s each — host starts the clock once the question is read; each team faces its opponent’s questions).<br>Semi-Final &amp; Final: '+SETTINGS.sharedQ+' shared <b>buzzer</b> questions — first team to buzz answers within '+SETTINGS.buzzSecs+'s, <b>+1</b> if right and <b>−1</b> if wrong or no answer; if they miss, press <b>GO</b> to give the other team the question. The Final then adds '+(SETTINGS.openPerTeam*2)+' open-ended questions ('+SETTINGS.openPerTeam+' per team) — each team performs a member’s 20-second presentation from a photo (host scores 0–3).';
  $('startBtn').addEventListener('click',startTournament);
  const saved=load();
  if(saved&&saved.matches){$('resumeBtn').style.display='block';
@@ -1061,9 +1066,9 @@ function nextBuzz(){
 }
 function renderBuzzQuestion(){
  const q=state.questions[play.qIdx];
- play.phase='buzzwait';play.turn=-1;play.bzTried=[false,false];play.bzFirst=null;play.qDelta=[0,0];play.bzElim=[];play.last=null;
+ play.phase='buzzwait';play.turn=-1;play.bzTried=[false,false];play.bzFirst=null;play.goSide=null;play.qDelta=[0,0];play.last=null;
  snd('intro');
- $('turnBanner').innerHTML='🔔 <b>Buzz in!</b> First team to buzz answers · +1 if right, −1 if wrong';
+ $('turnBanner').innerHTML='🔔 <b>Buzz in!</b> First team to buzz answers · +1 right / −1 wrong · a miss can pass to the other team';
  $('qNum').textContent='Question '+(play.bzAsked+1)+' of '+play.bzTotal+(play.mi>=5?' · Sudden Death':'');
  const qw=$('qWrap');qw.style.animation='none';qw.classList.remove('sweep');void qw.offsetWidth;qw.style.animation='slidein .4s ease';qw.classList.add('sweep');
  renderQText(q.q);
@@ -1098,78 +1103,70 @@ function renderBuzzBtns(){
    option (a previous team's wrong pick) stays locked out so only the remaining
    choices are pickable */
 function armBuzzOptions(on){
- for(let i=0;i<4;i++){const el=$('ans'+i);if(!el)continue;
-  const elim=play.bzElim.indexOf(i)>=0;
-  el.classList.toggle('pick',on&&!elim);el.classList.toggle('elim',elim);}
+ for(let i=0;i<4;i++){const el=$('ans'+i);if(el)el.classList.toggle('pick',!!on);}
 }
 function buzzIn(side){
- if(!play||!play.buzzer)return;
- if(play.phase==='buzzwait'){if(play.bzTried[side])return;}        /* first buzz: either team */
- else if(play.phase==='buzzsteal'){if(side!==play.stealSide)return;} /* steal: only the other team */
- else return;
+ if(!play||!play.buzzer||play.phase!=='buzzwait'||play.bzTried[side])return;
  if(play.bzFirst==null)play.bzFirst=side;
+ startAnswer(side);
+}
+/* start a team's 10s answering window with all four options tappable */
+function startAnswer(side){
  play.turn=side;play.phase='buzzanswer';
- const accent=side===0?'#f5c542':'#4dd7ff',n=4-play.bzElim.length;
- $('turnBanner').innerHTML='⏱ <b style="color:'+accent+'">'+esc(teamOf(side))+'</b> — tap the answer they give · '+n+' option'+(n===1?'':'s')+' · '+SETTINGS.buzzSecs+'s';
+ const accent=side===0?'#f5c542':'#4dd7ff';
+ $('turnBanner').innerHTML='⏱ <b style="color:'+accent+'">'+esc(teamOf(side))+'</b> — tap the answer they give · '+SETTINGS.buzzSecs+'s';
  snd('lockin');
  armBuzzOptions(true);
- $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="judgebtn bad" onclick="buzzNoAnswer()">⏰ No answer / wrong (−1)</button></div>';
- setKbd('Tap their answer · <span>1</span>–<span>4</span> · <span>0</span> no answer');
+ $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="judgebtn bad" onclick="buzzNoAnswer()">⏰ No answer (−1)</button></div>';
+ setKbd('Tap their answer · <span>1</span>–<span>4</span> · <span>0</span> no answer · clock auto-ends');
  startTimer(SETTINGS.buzzSecs);
  updatePanels();save();
 }
-/* host taps the option the answering team actually gave; right = +1, wrong = −1
-   and that option is eliminated for the other team's steal */
+/* host taps the option the team gave: correct = +1, wrong = −1 (auto). On a miss,
+   the other team can be given the question via the GO button. */
 function pickBuzz(i){
- if(!play||play.phase!=='buzzanswer'||play.bzElim.indexOf(i)>=0)return;
+ if(!play||play.phase!=='buzzanswer')return;
  stopTimer();
  const q=state.questions[play.qIdx],m=state.matches[play.mi],side=play.turn,ok=(i===q.correct),delta=ok?1:-1;
- play.bzTried[side]=true;
  if(side===0)m.sa+=delta;else m.sb+=delta;
  play.qDelta[side]+=delta;
- if(ok){
-  snd('correct');burst(170);
-  revealBuzzAnswer();
-  $('turnBanner').innerHTML='✨ <b>CORRECT!</b> +1 to '+esc(teamOf(side));
-  finishBuzzQuestion();
- }else{
-  snd('wrong');
-  play.bzElim.push(i);
-  const el=$('ans'+i);if(el){el.classList.remove('pick');el.classList.add('wrong','elim');}
-  const other=1-side;
-  if(!play.bzTried[other])beginSteal(other);
-  else{revealBuzzAnswer();$('turnBanner').innerHTML='❌ <b>Wrong</b> (−1). Correct answer shown';finishBuzzQuestion();}
- }
+ if(ok){snd('correct');burst(170);$('turnBanner').innerHTML='✨ <b>CORRECT!</b> +1 to '+esc(teamOf(side));revealBuzzAnswer();finishBuzzQuestion();}
+ else{snd('wrong');const el=$('ans'+i);if(el)el.classList.add('wrong');buzzFail(side,'Wrong');}
  updatePanels();save();
 }
 function buzzNoAnswer(){
  if(!play||play.phase!=='buzzanswer')return;
  stopTimer();
  const m=state.matches[play.mi],side=play.turn;
- play.bzTried[side]=true;
  if(side===0)m.sa-=1;else m.sb-=1;
  play.qDelta[side]-=1;snd('wrong');
+ buzzFail(side,'No answer');
+ updatePanels();save();
+}
+function buzzTimeout(){buzzNoAnswer();} /* 10s elapsed = automatic no answer */
+/* a team missed (−1). If the other team hasn't gone yet, offer a GO button that
+   starts THEIR 10s clock; otherwise reveal the answer and end the question. */
+function buzzFail(side,label){
+ play.bzTried[side]=true;
  const other=1-side;
- if(!play.bzTried[other])beginSteal(other);
- else{revealBuzzAnswer();$('turnBanner').innerHTML='❌ <b>No answer</b> (−1). Correct answer shown';finishBuzzQuestion();}
- updatePanels();save();
+ if(!play.bzTried[other]){
+  play.phase='buzzgo';play.turn=-1;play.goSide=other;
+  armBuzzOptions(false);
+  const accent=other===0?'#f5c542':'#4dd7ff';
+  $('turnBanner').innerHTML='❌ '+label+' (−1). <b style="color:'+accent+'">'+esc(teamOf(other))+'</b> can answer — press <b>GO</b>';
+  $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(other===0?'teamA':'teamB')+'" onclick="goSecond()">▶ GO — '+esc(teamOf(other))+'</button></div>';
+  setKbd('Press <span>G</span> to start '+esc(teamOf(other))+'’s '+SETTINGS.buzzSecs+'s');
+  stopTimer();timerBase=SETTINGS.buzzSecs;tLeft=SETTINGS.buzzSecs;renderTimer();$('clock').classList.remove('primed');
+ }else{
+  revealBuzzAnswer();
+  $('turnBanner').innerHTML='❌ '+label+' (−1). Correct answer shown';
+  finishBuzzQuestion();
+ }
 }
-function buzzTimeout(){
- snd('timeup');
- $('turnBanner').innerHTML='⏰ <b>Time’s up!</b> No answer from '+esc(teamOf(play.turn));
- buzzNoAnswer();
-}
-/* first team missed — hand the question to the other team, but WAIT for the host
-   to press that team's button, which restarts a fresh 10s clock */
-function beginSteal(other){
- play.phase='buzzsteal';play.turn=-1;play.stealSide=other;
- armBuzzOptions(false);
- const accent=other===0?'#f5c542':'#4dd7ff',n=4-play.bzElim.length;
- $('turnBanner').innerHTML='❌ Wrong (−1). <b style="color:'+accent+'">'+esc(teamOf(other))+'</b> — press to steal · '+n+' option'+(n===1?'':'s')+' left';
- $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(other===0?'teamA':'teamB')+'" onclick="buzzIn('+other+')">🔔 '+esc(teamOf(other))+' — steal</button></div>';
- setKbd('Press <span>'+(other===0?'A':'B')+'</span> to start the steal — resets the 10s');
- stopTimer();timerBase=SETTINGS.buzzSecs;tLeft=SETTINGS.buzzSecs;renderTimer();$('clock').classList.remove('primed');
- updatePanels();save();
+/* GO pressed — second team gets the same question, fresh 10s, all four options */
+function goSecond(){
+ if(!play||play.phase!=='buzzgo')return;
+ startAnswer(play.goSide);
 }
 function revealBuzzAnswer(){
  const q=state.questions[play.qIdx];
@@ -1511,8 +1508,8 @@ document.addEventListener('keydown',e=>{
   }else if(play.phase==='buzzanswer'){
    if(e.key>='1'&&e.key<='4'){e.preventDefault();pickBuzz(+e.key-1);return;}
    if(e.key==='0'||e.key==='x'||e.key==='X'){e.preventDefault();buzzNoAnswer();return;}
-  }else if(play.phase==='buzzsteal'){
-   if(e.key==='a'||e.key==='A'||e.key==='b'||e.key==='B'){e.preventDefault();buzzIn(play.stealSide);return;}
+  }else if(play.phase==='buzzgo'){
+   if(e.key==='g'||e.key==='G'||e.key==='a'||e.key==='A'||e.key==='b'||e.key==='B'){e.preventDefault();goSecond();return;}
   }
  }
  if(play.phase==='openq'&&e.key>='0'&&e.key<='3')awardOpen(+e.key);
