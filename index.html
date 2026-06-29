@@ -1110,7 +1110,8 @@ function buzzIn(side){
  if(play.bzFirst==null)play.bzFirst=side;
  startAnswer(side);
 }
-/* start a team's 10s answering window with all four options tappable */
+/* start a team's 10s answering window with all four options tappable; any wrong
+   pick from the first team stays marked so the second team can see what missed */
 function startAnswer(side){
  play.turn=side;play.phase='buzzanswer';
  const accent=side===0?'#f5c542':'#4dd7ff';
