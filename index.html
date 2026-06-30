@@ -1024,7 +1024,7 @@ function startMatch(mi){
  rebuildQueues(); /* restore the correct remaining pool for this (re)started match */
  play={mi,buzzer:mi>=3,asked:[0,0],openAsked:[0,0],
   quota:(mi<3?SETTINGS.round1PerTeam:1),
-  bzTotal:(mi>=3&&mi<5?SETTINGS.sharedQ:1),bzAsked:0,bzTried:[false,false],bzFirst:null,qDelta:[0,0],
+  bzTotal:(mi>=3&&mi<5?SETTINGS.sharedQ:(mi>=5?3:1)),bzAsked:0,bzTried:[false,false],bzFirst:null,qDelta:[0,0],
   qIdx:null,phase:'idle',turn:0,hist:[[],[]],histO:[[],[]]};
  $('matchLabel').textContent=m.name;
  $('endGameBtn').classList.toggle('hidden',mi!==4); /* early-end only in the Final */
