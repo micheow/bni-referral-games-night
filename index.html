@@ -1454,7 +1454,7 @@ function startTimer(secs){
 function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}const c=$('clock');if(c)c.classList.remove('low');}
 function renderTimer(){
  const c=$('clock');
- $('timerText').textContent=timerBase>=60?(Math.floor(tLeft/60)+':'+String(tLeft%60).padStart(2,'0')):tLeft;
+ $('timerText').textContent=tLeft; /* plain seconds (e.g. 57, not 0:57) for every timer */
  c.style.setProperty('--p',(tLeft/timerBase*100));
  c.classList.toggle('low',tLeft<=5);
 }
