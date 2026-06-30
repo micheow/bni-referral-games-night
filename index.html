@@ -218,7 +218,8 @@ button:active{transform:translateY(1px) scale(.98)}
 .judgebtn.ok{background:linear-gradient(180deg,#3bf08a,#15b85e 52%,#0a7a3c);color:#03210f}
 .judgebtn.bad{background:linear-gradient(180deg,#ff6f80,#e0344c 52%,#9c0f24)}
 .judgebtn.pulse{animation:btnpulse 1.1s ease-in-out infinite}
-.rehearsechip{position:fixed;top:12px;right:14px;z-index:6;font-family:inherit;font-size:11px;
+.rehearserow{position:fixed;top:12px;right:14px;z-index:6;display:flex;gap:8px}
+.rehearsechip{font-family:inherit;font-size:11px;
  letter-spacing:.5px;padding:5px 12px;border-radius:999px;background:rgba(10,24,58,.55);
  border:1px solid rgba(169,194,239,.22);color:var(--mut);cursor:pointer;opacity:.7}
 .rehearsechip:hover{opacity:1;color:var(--txt);border-color:var(--silver)}
@@ -400,7 +401,10 @@ input:focus{outline:2px solid var(--gold)}
 </div>
 <!-- ============ BRACKET ============ -->
 <div id="bracket" class="screen hidden">
- <button class="rehearsechip" id="rehearseBtn" title="Rehearsal: jump straight into the Semi-Final / Final">&#127916; Rehearse</button>
+ <div class="rehearserow" id="rehearseRow">
+  <button class="rehearsechip" id="rehearseOpenBtn" title="Rehearsal: jump straight to the open-ended round">&#127908; Open Round</button>
+  <button class="rehearsechip" id="rehearseBtn" title="Rehearsal: jump straight into the Semi-Final / Final">&#127916; Rehearse</button>
+ </div>
  <h1 class="logo">Tournament Bracket</h1>
  <p class="sub">Highest-scoring Round 1 winner advances straight to the Final &middot; Round 1 uses opponents&rsquo; questions</p>
  <div id="champBox"></div>
@@ -952,7 +956,7 @@ function renderBracket(){
  /* rehearsal shortcut is only offered before Round 1 is settled (so it can't
     clobber the real Semi/Final once teams have actually advanced) */
  const _r1done=state.matches[0].done&&state.matches[1].done&&state.matches[2].done;
- const _rb=$('rehearseBtn');if(_rb)_rb.classList.toggle('hidden',_r1done);
+ const _rb=$('rehearseRow');if(_rb)_rb.classList.toggle('hidden',_r1done);
  save();
  requestAnimationFrame(drawFlow);
 }
@@ -967,6 +971,16 @@ function rehearse(){
  seed(4,2,3); /* Final: Team William vs Team Winston */
  renderBracket();
  alert('Rehearsal ready ✓\n\nThe Semi-Final and Final now show PLAY - click either to test the buzzer round. The Final also runs the open-ended round at the end.\n\nThis is practice only; starting any Round 1 match clears it.');
+}
+/* Rehearsal shortcut straight into the Final's open-ended round (skips the 15
+   buzzer questions) so the host can preview the photo presentations. */
+function rehearseOpen(){
+ if(!state){alert('Press “Start Tournament” first.');return;}
+ const m=state.matches[4];
+ m.a=2;m.b=3;m.sa=0;m.sb=0;m.done=false;m.winner=null;m.regA=null;m.regB=null;m.usedQ=[];m.rehearsal=true;
+ startMatch(4);             /* sets up the Final and renders its first buzzer question */
+ play.bzAsked=play.bzTotal; /* mark the 15 buzzer questions as done */
+ nextQuestion();            /* -> jumps straight into the open-ended round */
 }
 function clickMatch(i){
  const m=state.matches[i];
@@ -1499,6 +1513,7 @@ $('endGameBtn').addEventListener('click',()=>{
 $('undoBtn').addEventListener('click',undoLast);
 $('exportBtn').addEventListener('click',exportCSV);
 $('rehearseBtn').addEventListener('click',rehearse);
+$('rehearseOpenBtn').addEventListener('click',rehearseOpen);
 $('resetBtn').addEventListener('click',()=>{
  if(confirm('Reset the WHOLE tournament? Scores and bracket will be wiped.')){
   localStorage.removeItem(LS);location.reload();}});
