@@ -391,7 +391,7 @@ input:focus{outline:2px solid var(--gold)}
   <p class="note" id="bankNote" style="margin-top:14px"></p>
  </div>
  <button class="btn gold big" id="startBtn">Start Tournament &rarr;</button>
- <button class="btn ghost big" id="resumeBtn" style="display:none">Resume saved tournament &#8617;</button>
+ <button class="btn ghost big" id="resumeBtn" style="display:none">Resume Saved Tournament &#8617;</button>
 </div>
 <!-- ============ BRACKET ============ -->
 <div id="bracket" class="screen hidden">
@@ -407,9 +407,9 @@ input:focus{outline:2px solid var(--gold)}
   <div class="round"><div class="roundtitle">Final</div><div id="m4"></div></div>
  </div>
  <div class="toolbar">
-  <button class="btn" id="exportBtn">&#11015; Export results</button>
+  <button class="btn" id="exportBtn">&#11015; Export Results</button>
   <button class="btn ghost" id="poolBtn"></button>
-  <button class="btn danger" id="resetBtn">Reset tournament</button>
+  <button class="btn danger" id="resetBtn">Reset Tournament</button>
  </div>
 </div>
 <!-- ============ GAME ============ -->
@@ -430,9 +430,9 @@ input:focus{outline:2px solid var(--gold)}
  <div class="gctrl">
   <button class="btn gold pulse hidden" id="startTimerBtn">&#9654; Start Timer</button>
   <button class="btn" id="skipBtn">&#9197; Skip</button>
-  <button class="btn gold hidden" id="nextBtn">Next question &rarr;</button>
+  <button class="btn gold hidden" id="nextBtn">Next Question &rarr;</button>
   <button class="btn ghost hidden" id="undoBtn">&#8617; Undo</button>
-  <button class="btn danger small hidden" id="endGameBtn">&#127937; End &amp; take score</button>
+  <button class="btn danger small hidden" id="endGameBtn">&#127937; End &amp; Take Score</button>
   <button class="btn ghost" id="quitBtn">Exit to Main</button>
  </div>
  <p class="kbd" id="kbdHint">Host keys: <span>Space</span> start timer &middot; <span>1</span>&ndash;<span>4</span> lock answer &middot; <span>S</span> skip &middot; <span>U</span> undo &middot; <span>N</span>/<span>Space</span> next</p>
@@ -1300,7 +1300,7 @@ function nextOpenQuestion(){
  $('answers').innerHTML='<div class="openbox">'+
   (q.img?'<div class="openphotoWrap"><img class="openphoto" src="'+q.img+'" alt="'+esc(q.person||'')+'">'+(q.person?'<div class="openname">'+esc(q.person)+'</div>':'')+'</div>':'')+
   '<div class="openlbl">'+(q.img?'🎤 Perform their 20-second presentation from memory - more accurate &amp; complete earns more points':'🎤 Give your best answer! More accurate and complete answers earn more points')+'</div>'+
-  (q.answer?'<button class="btn ghost" id="revealBtn">Reveal suggested answer</button><div id="modelAns" class="hidden"></div>':'')+
+  (q.answer?'<button class="btn ghost" id="revealBtn">Reveal Suggested Answer</button><div id="modelAns" class="hidden"></div>':'')+
   '<div class="chiplbl">Award points (keys 0–3)</div>'+
   '<div class="chips">'+[0,1,2,3].map(p=>'<button class="chip" id="ochip'+p+'" onclick="awardOpen('+p+')">'+p+'</button>').join('')+'</div></div>';
  if(q.answer){$('modelAns').textContent=q.answer;
@@ -1460,7 +1460,7 @@ function endMatch(forced){
   '<div class="oscore"><div class="oside win"><div class="onmS">'+esc(state.teams[wn])+'</div><div class="onum">'+ws+'</div></div>'+
   '<div class="odash">:</div>'+
   '<div class="oside lose"><div class="onmS">'+esc(state.teams[ln])+'</div><div class="onum">'+lsc+'</div></div></div>'+
-  '<button class="btn gold big" onclick="closeOverlay()">Back to bracket →</button></div>';
+  '<button class="btn gold big" onclick="closeOverlay()">Back to Bracket →</button></div>';
  document.body.appendChild(ov);
  if(isFinal){let k=0;const iv=setInterval(()=>{burst(200,true);if(++k>5)clearInterval(iv);},900);}
  play=null;
