@@ -1377,8 +1377,9 @@ function nextOpenQuestion(){
  $('qText').textContent=q.q;
  $('answers').innerHTML='<div class="openbox">'+
   (q.img?'<div class="openphotoWrap"><img class="openphoto" src="'+q.img+'" alt="'+esc(q.person||'')+'">'+(q.person?'<div class="openname">'+esc(q.person)+'</div>':'')+'</div>':'')+
-  '<div class="openlbl">'+(q.img?'🎤 Perform their 20-second presentation from memory - more accurate &amp; complete earns more points':'🎤 Give your best answer! More accurate and complete answers earn more points')+'</div>'+
-  (q.video?'<button class="btn gold openplay" id="playVidBtn">&#9654; Play the real 20-sec presentation</button>':'')+
+  (q.video
+    ? '<button class="btn gold openplay" id="playVidBtn">&#9654; Play the real 20-sec presentation</button>'
+    : '<div class="openlbl">'+(q.img?'🎤 Perform their 20-second presentation from memory - more accurate &amp; complete earns more points':'🎤 Give your best answer! More accurate and complete answers earn more points')+'</div>')+
   (q.answer?'<button class="btn ghost" id="revealBtn">Reveal Suggested Answer</button><div id="modelAns" class="hidden"></div>':'')+
   '<div class="chiplbl">Award points (keys 0–3)</div>'+
   '<div class="chips">'+[0,1,2,3].map(p=>'<button class="chip" id="ochip'+p+'" onclick="awardOpen('+p+')">'+p+'</button>').join('')+'</div></div>';
