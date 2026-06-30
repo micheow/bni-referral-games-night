@@ -1093,7 +1093,7 @@ function nextBuzz(){
 }
 function renderBuzzQuestion(){
  const q=state.questions[play.qIdx];
- play.phase='buzzwait';play.turn=-1;play.bzTried=[false,false];play.bzFirst=null;play.goSide=null;play.qDelta=[0,0];play.last=null;
+ play.phase='buzzwait';play.turn=-1;play.bzTried=[false,false];play.bzFirst=null;play.goSide=null;play.qDelta=[0,0];play.last=null;play.bzDead=[];
  snd('intro');
  $('turnBanner').innerHTML='🔔 <b>Buzz in!</b> First team to buzz answers · +1 right / −1 wrong · a miss can pass to the other team';
  $('qNum').textContent='Question '+(play.bzAsked+1)+' of '+play.bzTotal+(play.mi>=5?' · Sudden Death':'');
@@ -1130,7 +1130,9 @@ function renderBuzzBtns(){
    option (a previous team's wrong pick) stays locked out so only the remaining
    choices are pickable */
 function armBuzzOptions(on){
- for(let i=0;i<4;i++){const el=$('ans'+i);if(el)el.classList.toggle('pick',!!on);}
+ for(let i=0;i<4;i++){const el=$('ans'+i);if(!el)continue;
+  const dead=play&&play.bzDead&&play.bzDead.includes(i); /* a team's wrong pick stays locked out */
+  el.classList.toggle('pick',!!on&&!dead);}
 }
 function buzzIn(side){
  if(!play||!play.buzzer||play.phase!=='buzzwait'||play.bzTried[side])return;
@@ -1157,12 +1159,13 @@ function pickBuzz(i){
  if(!play)return;
  if(play.phase==='buzzgo')goSecond(); /* tapping an answer in the GO state auto-starts the 2nd team, then scores it */
  if(play.phase!=='buzzanswer')return;
+ if(play.bzDead&&play.bzDead.includes(i))return; /* an answer already missed this question can't be picked again */
  stopTimer();
  const q=state.questions[play.qIdx],m=state.matches[play.mi],side=play.turn,ok=(i===q.correct),delta=ok?1:-1;
  if(side===0)m.sa+=delta;else m.sb+=delta;
  play.qDelta[side]+=delta;
  if(ok){snd('correct');burst(170);$('turnBanner').innerHTML='✨ <b>CORRECT!</b> +1 to '+esc(teamOf(side));revealBuzzAnswer();finishBuzzQuestion();}
- else{snd('wrong');const el=$('ans'+i);if(el)el.classList.add('wrong');buzzFail(side,'Wrong');}
+ else{snd('wrong');const el=$('ans'+i);if(el)el.classList.add('wrong','dead');(play.bzDead=play.bzDead||[]).push(i);buzzFail(side,'Wrong');}
  updatePanels();save();
 }
 function buzzNoAnswer(){
@@ -1205,6 +1208,7 @@ function goSecond(){
 function renderBuzzGo(second){
  play.phase='buzzgo';play.turn=-1;play.goSide=second;play.bzTried[second]=false;
  for(let i=0;i<4;i++){const el=$('ans'+i);if(el)el.classList.remove('right','wrong','dead','dim','pick');}
+ if(play.bzDead)play.bzDead.forEach(i=>{const el=$('ans'+i);if(el)el.classList.add('wrong','dead');}); /* keep already-missed answers locked out */
  const accent=second===0?'#f5c542':'#4dd7ff';
  $('turnBanner').innerHTML='↩ <b style="color:'+accent+'">'+esc(teamOf(second))+'</b> can answer - press <b>GO</b>';
  $('buzzCtrl').classList.remove('hidden');
