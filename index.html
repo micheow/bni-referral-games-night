@@ -1157,7 +1157,7 @@ function buzzFail(side,label){
   armBuzzOptions(false);
   const accent=other===0?'#f5c542':'#4dd7ff';
   $('turnBanner').innerHTML='❌ '+label+' (−1). <b style="color:'+accent+'">'+esc(teamOf(other))+'</b> can answer - press <b>GO</b>';
-  $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(other===0?'teamA':'teamB')+'" onclick="goSecond()">▶ GO - '+esc(teamOf(other))+'</button></div>';
+  $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(other===0?'teamA':'teamB')+'" onclick="goSecond()">▶ GO '+esc(teamOf(other))+'</button></div>';
   setKbd('Press <span>G</span> to start '+esc(teamOf(other))+'’s '+SETTINGS.buzzSecs+'s');
   stopTimer();timerBase=SETTINGS.buzzSecs;tLeft=SETTINGS.buzzSecs;renderTimer();$('clock').classList.remove('primed');
  }else{
