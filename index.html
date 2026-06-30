@@ -1146,7 +1146,8 @@ function startAnswer(side){
  snd('lockin');
  armBuzzOptions(true);
  $('buzzCtrl').innerHTML=''; /* no "No answer" button - the 10s clock auto-ends as −1 */
- setKbd('Tap the answer they give · <span>1</span>–<span>4</span> · clock runs out = −1');
+ $('undoBtn').classList.remove('hidden'); /* let the host step back if the wrong team was picked */
+ setKbd('Tap the answer they give · <span>1</span>–<span>4</span> · <span>U</span> undo (wrong team) · clock runs out = −1');
  startTimer(SETTINGS.buzzSecs);
  updatePanels();save();
 }
@@ -1185,7 +1186,8 @@ function buzzFail(side,label){
   const accent=other===0?'#f5c542':'#4dd7ff';
   $('turnBanner').innerHTML='❌ '+label+' (−1). <b style="color:'+accent+'">'+esc(teamOf(other))+'</b> can answer - press <b>GO</b>';
   $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(other===0?'teamA':'teamB')+'" onclick="goSecond()">▶ GO '+esc(teamOf(other))+'</button></div>';
-  setKbd('Press <span>G</span> to start '+esc(teamOf(other))+'’s '+SETTINGS.buzzSecs+'s');
+  $('undoBtn').classList.remove('hidden'); /* host can undo the first team's −1 if mis-scored */
+  setKbd('Press <span>G</span> to start '+esc(teamOf(other))+'’s '+SETTINGS.buzzSecs+'s · <span>U</span> undo');
   stopTimer();timerBase=SETTINGS.buzzSecs;tLeft=SETTINGS.buzzSecs;renderTimer();$('clock').classList.remove('primed');
  }else{
   revealBuzzAnswer();
@@ -1198,6 +1200,44 @@ function goSecond(){
  if(!play||play.phase!=='buzzgo')return;
  startAnswer(play.goSide);
 }
+/* Re-show the "press GO" prompt so the given team can (re)answer; used by undo so the
+   FIRST team's result is preserved while only the second team is re-done. */
+function renderBuzzGo(second){
+ play.phase='buzzgo';play.turn=-1;play.goSide=second;play.bzTried[second]=false;
+ for(let i=0;i<4;i++){const el=$('ans'+i);if(el)el.classList.remove('right','wrong','dead','dim','pick');}
+ const accent=second===0?'#f5c542':'#4dd7ff';
+ $('turnBanner').innerHTML='↩ <b style="color:'+accent+'">'+esc(teamOf(second))+'</b> can answer - press <b>GO</b>';
+ $('buzzCtrl').classList.remove('hidden');
+ $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(second===0?'teamA':'teamB')+'" onclick="goSecond()">▶ GO '+esc(teamOf(second))+'</button></div>';
+ $('nextBtn').classList.add('hidden');$('skipBtn').classList.remove('hidden');$('undoBtn').classList.remove('hidden');
+ setKbd('Press <span>G</span> to start '+esc(teamOf(second))+'’s '+SETTINGS.buzzSecs+'s · <span>U</span> undo');
+ stopTimer();timerBase=SETTINGS.buzzSecs;tLeft=SETTINGS.buzzSecs;renderTimer();$('clock').classList.remove('primed');
+ updatePanels();save();
+}
+/* Step back during the buzzer round before a question is finished (wrong team picked,
+   or to re-do a team's turn). */
+function buzzBack(){
+ if(!play||!play.buzzer)return;
+ stopTimer();
+ const m=state.matches[play.mi];
+ if(play.phase==='buzzanswer'){
+  const side=play.turn,other=1-side;
+  if(play.bzTried[other]){renderBuzzGo(side);} /* second team mid-answer → back to its GO prompt */
+  else{$('undoBtn').classList.add('hidden');renderBuzzQuestion();} /* first team mid-answer, nothing scored → back to "who buzzed?" */
+  return;
+ }
+ if(play.phase==='buzzgo'){ /* undo the first team's −1 and return to "who buzzed?" */
+  const first=play.bzFirst;
+  if(first===0)m.sa-=play.qDelta[0];else if(first===1)m.sb-=play.qDelta[1];
+  $('undoBtn').classList.add('hidden');renderBuzzQuestion();updatePanels();save();
+ }
+}
+/* Route the Undo button / U key by phase. */
+function undoAction(){
+ if(!play)return;
+ if(play.phase==='buzzanswer'||play.phase==='buzzgo')buzzBack();
+ else undoLast();
+}
 function revealBuzzAnswer(){
  const q=state.questions[play.qIdx];
  for(let k=0;k<4;k++){const el=$('ans'+k);if(el){el.classList.add('dead');el.classList.remove('pick');if(k!==q.correct)el.classList.add('dim');}}
@@ -1208,7 +1248,7 @@ function finishBuzzQuestion(){
  const m=state.matches[play.mi];
  (m.usedQ=m.usedQ||[]).push(play.qIdx);
  play.bzAsked++;
- play.last={kind:'buzz',deltas:play.qDelta.slice(),qIdx:play.qIdx};
+ play.last={kind:'buzz',deltas:play.qDelta.slice(),qIdx:play.qIdx,first:play.bzFirst};
  $('buzzCtrl').classList.add('hidden');
  $('nextBtn').classList.remove('hidden');
  $('skipBtn').classList.add('hidden');
@@ -1404,7 +1444,23 @@ function undoLast(){
  if(!play||play.phase!=='revealed'||!play.last)return;
  const L=play.last,m=state.matches[play.mi];
  if(L.kind==='buzz'){
-  m.sa-=L.deltas[0];m.sb-=L.deltas[1];
+  const dA=L.deltas[0],dB=L.deltas[1],first=L.first;
+  const bothScored=dA!==0&&dB!==0&&first!=null;
+  if(bothScored){
+   /* the second team answered after the first missed → roll back ONLY the second team
+      and let them answer again; the first team's −1 stays */
+   const second=1-first;
+   if(second===0)m.sa-=dA;else m.sb-=dB;
+   if(m.usedQ){const ix=m.usedQ.lastIndexOf(L.qIdx);if(ix>=0)m.usedQ.splice(ix,1);}
+   play.bzAsked=Math.max(0,play.bzAsked-1);
+   play.qDelta=first===0?[dA,0]:[0,dB]; /* keep the first team's delta, clear the second's */
+   play.bzTried[first]=true;play.bzFirst=first;
+   play.last=null;snd('skip');
+   renderBuzzGo(second);
+   return;
+  }
+  /* only one team answered → roll back fully and re-ask the whole question */
+  m.sa-=dA;m.sb-=dB;
   if(m.usedQ){const ix=m.usedQ.lastIndexOf(L.qIdx);if(ix>=0)m.usedQ.splice(ix,1);}
   play.bzAsked=Math.max(0,play.bzAsked-1);
   returnMcq(L.qIdx,true);
@@ -1541,7 +1597,7 @@ $('endGameBtn').addEventListener('click',()=>{
  let msg=(play.mi===4?'End the FINAL now and crown the champion':'End this match now and take the current score')+'?\n\nScore: '+lead+'\nWinner: '+winName;
  if(tied)msg+='\n(Tie → '+winName+' takes it.)';
  if(confirm(msg))endMatch(true);});
-$('undoBtn').addEventListener('click',undoLast);
+$('undoBtn').addEventListener('click',undoAction);
 $('exportBtn').addEventListener('click',exportCSV);
 $('rehearseBtn').addEventListener('click',rehearse);
 $('rehearseOpenBtn').addEventListener('click',rehearseOpen);
@@ -1572,7 +1628,7 @@ document.addEventListener('keydown',e=>{
  else if((e.key===' '||e.key==='Enter')&&(play.phase==='open'||play.phase==='openq')&&!play.timerStarted){e.preventDefault();beginTimer();}
  else if(e.key>='1'&&e.key<='4'&&play.phase==='open')lockAnswer(+e.key-1);
  else if((e.key==='s'||e.key==='S')&&play.phase==='open')skipQ();
- else if((e.key==='u'||e.key==='U')&&play.phase==='revealed')undoLast();
+ else if((e.key==='u'||e.key==='U')&&(play.phase==='revealed'||play.phase==='buzzanswer'||play.phase==='buzzgo'))undoAction();
  else if((e.key==='n'||e.key==='N'||e.key===' '||e.key==='Enter')&&play.phase==='revealed'){e.preventDefault();nextQuestion();}});
 addEventListener('resize',()=>requestAnimationFrame(drawFlow));
 initSetup();
