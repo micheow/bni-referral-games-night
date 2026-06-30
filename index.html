@@ -861,9 +861,9 @@ function initSetup(){
  if(saved&&saved.matches){
   const sp=saved.play||null;
   const live=sp&&sp.mi!=null&&saved.matches[sp.mi]&&!saved.matches[sp.mi].done;
-  $('resumeBtn').style.display='block';
-  $('resumeBtn').className=live?'btn gold big':'btn ghost big';
-  $('resumeBtn').innerHTML=live?('&#9654; Resume '+esc(saved.matches[sp.mi].name)+' &mdash; in progress'):'Resume Saved Tournament &#8617;';
+  $('resumeBtn').className='btn ghost';
+  $('resumeBtn').style.cssText='display:block;margin:14px auto 0;font-size:clamp(12px,1vw,15px);padding:10px 24px;border-radius:12px;opacity:.85';
+  $('resumeBtn').innerHTML=live?('Resume '+esc(saved.matches[sp.mi].name)+' &#8617;'):'Resume Saved Tournament &#8617;';
   $('resumeBtn').addEventListener('click',function(){
    state=saved;play=saved.play||null;if('play' in state)delete state.play;
    if(play&&play.mi!=null&&state.matches[play.mi]&&!state.matches[play.mi].done){rehydrate();}
@@ -1123,8 +1123,8 @@ function renderBuzzBtns(){
  const m=state.matches[play.mi],bc=$('buzzCtrl');
  bc.classList.remove('hidden');
  bc.innerHTML='<div class="buzzrow">'+
-  '<button class="buzzbtn teamA" onclick="buzzIn(0)">🔔 <b>1</b> · '+esc(state.teams[m.a])+'</button>'+
-  '<button class="buzzbtn teamB" onclick="buzzIn(1)">🔔 <b>2</b> · '+esc(state.teams[m.b])+'</button></div>';
+  '<button class="buzzbtn teamA" onclick="buzzIn(0)">🔔 '+esc(state.teams[m.a])+'</button>'+
+  '<button class="buzzbtn teamB" onclick="buzzIn(1)">🔔 '+esc(state.teams[m.b])+'</button></div>';
 }
 /* enable clicking the answer hexes for the team that's answering; an eliminated
    option (a previous team's wrong pick) stays locked out so only the remaining
@@ -1185,7 +1185,7 @@ function buzzFail(side,label){
   armBuzzOptions(false);
   const accent=other===0?'#f5c542':'#4dd7ff';
   $('turnBanner').innerHTML='❌ '+label+' (−1). <b style="color:'+accent+'">'+esc(teamOf(other))+'</b> can answer - press <b>GO</b>';
-  $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(other===0?'teamA':'teamB')+'" onclick="goSecond()">▶ GO '+esc(teamOf(other))+' <b>(Space)</b></button></div>';
+  $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(other===0?'teamA':'teamB')+'" onclick="goSecond()">▶ GO '+esc(teamOf(other))+'</button></div>';
   $('undoBtn').classList.remove('hidden'); /* host can undo the first team's −1 if mis-scored */
   setKbd('Press <span>Space</span> to start '+esc(teamOf(other))+'’s '+SETTINGS.buzzSecs+'s · <span>U</span> undo');
   stopTimer();timerBase=SETTINGS.buzzSecs;tLeft=SETTINGS.buzzSecs;renderTimer();$('clock').classList.remove('primed');
@@ -1208,7 +1208,7 @@ function renderBuzzGo(second){
  const accent=second===0?'#f5c542':'#4dd7ff';
  $('turnBanner').innerHTML='↩ <b style="color:'+accent+'">'+esc(teamOf(second))+'</b> can answer - press <b>GO</b>';
  $('buzzCtrl').classList.remove('hidden');
- $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(second===0?'teamA':'teamB')+'" onclick="goSecond()">▶ GO '+esc(teamOf(second))+' <b>(Space)</b></button></div>';
+ $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(second===0?'teamA':'teamB')+'" onclick="goSecond()">▶ GO '+esc(teamOf(second))+'</button></div>';
  $('nextBtn').classList.add('hidden');$('skipBtn').classList.remove('hidden');$('undoBtn').classList.remove('hidden');
  setKbd('Press <span>Space</span> to start '+esc(teamOf(second))+'’s '+SETTINGS.buzzSecs+'s · <span>U</span> undo');
  stopTimer();timerBase=SETTINGS.buzzSecs;tLeft=SETTINGS.buzzSecs;renderTimer();$('clock').classList.remove('primed');
@@ -1376,6 +1376,7 @@ function nextOpenQuestion(){
   $('revealBtn').addEventListener('click',()=>{$('modelAns').classList.remove('hidden');$('revealBtn').classList.add('hidden');});}
  $('nextBtn').classList.add('hidden');$('skipBtn').classList.remove('hidden');
  $('undoBtn').classList.add('hidden');play.last=null;
+ setKbd('Host: <span>Space</span> start timer · <span>0</span>–<span>3</span> award points · <span>S</span> skip');
  fitText($('qText'),15);
  updatePanels();
  /* open round: host starts a 1-minute clock for the performance */
