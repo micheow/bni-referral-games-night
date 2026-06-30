@@ -95,10 +95,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,system-ui,'Segoe UI',Roboto,He
  padding:clamp(20px,2.4vw,40px) 56px;font-size:clamp(22px,2.45vw,40px);font-weight:700;line-height:1.32;gap:0}
 #game.listq #qWrap .hi{height:clamp(210px,36vh,340px);padding-top:18px;padding-bottom:18px}
 #game.listq .ans .hi{height:clamp(56px,8.5vh,84px)} /* answers are short letter combos -> shorter tiles */
-#game.openrnd #qWrap{margin:8px auto 6px}
-#game.openrnd #qWrap .hi{height:clamp(58px,7.5vh,92px)} /* open round: compact prompt so the card fits one page */
-#game.openrnd .gctrl{margin-top:8px}
-#game.openrnd .kbd{margin-top:8px}
+#game.openrnd #qWrap{margin:10px auto 8px}
+#game.openrnd #qWrap .hi{height:clamp(66px,9vh,108px)} /* open round: compact prompt so the card fits one page */
+#game.openrnd .gctrl{margin-top:12px}
+#game.openrnd .kbd{margin-top:10px}
 #qWrap .hi .qtitle{display:block;font-size:1em;font-weight:800;line-height:1.24}
 #qWrap .hi .qlist{display:block;white-space:normal;font-size:.72em;font-weight:600;line-height:1.45;text-align:left;
  margin:.6em auto 0;max-width:40em}
@@ -294,19 +294,19 @@ input:focus{outline:2px solid var(--gold)}
 .toolbar{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px}
 /* ---------- open round ---------- */
 .openbox{text-align:center;background:rgba(8,22,54,.82);border:1.5px solid rgba(245,197,66,.45);
- border-radius:20px;padding:10px 22px;display:flex;flex-direction:column;gap:8px;align-items:center;
+ border-radius:20px;padding:14px 28px;display:flex;flex-direction:column;gap:11px;align-items:center;
  grid-column:1/-1;width:min(900px,100%);margin:0 auto;animation:slidein .45s ease}
-.openlbl{color:var(--gold);letter-spacing:1.5px;font-size:11px;text-transform:uppercase;font-weight:700;max-width:680px;line-height:1.3}
-.openphotoWrap{display:flex;flex-direction:column;align-items:center;gap:6px}
-.openphoto{width:clamp(100px,14vh,138px);height:clamp(100px,14vh,138px);object-fit:cover;object-position:center 22%;border-radius:16px;
+.openlbl{color:var(--gold);letter-spacing:1.7px;font-size:12.5px;text-transform:uppercase;font-weight:700;max-width:700px;line-height:1.35}
+.openphotoWrap{display:flex;flex-direction:column;align-items:center;gap:7px}
+.openphoto{width:clamp(118px,16vh,178px);height:clamp(118px,16vh,178px);object-fit:cover;object-position:center 22%;border-radius:16px;
  border:2px solid rgba(245,197,66,.55);box-shadow:0 10px 34px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.06)}
-.openname{font-size:clamp(16px,1.8vw,24px);font-weight:800;letter-spacing:1px;
+.openname{font-size:clamp(19px,2vw,28px);font-weight:800;letter-spacing:1px;
  background:linear-gradient(180deg,#fff3cf 8%,var(--gold) 45%,var(--goldD) 70%,#ffe9a8 95%);
  -webkit-background-clip:text;background-clip:text;color:transparent;font-family:'Cinzel',Georgia,serif}
 #modelAns{font-size:clamp(15px,1.5vw,22px);color:var(--ok1);max-width:780px;line-height:1.55}
-.chiplbl{color:var(--mut);font-size:10.5px;letter-spacing:2px;text-transform:uppercase}
-.chips{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.chip{width:50px;height:50px;border-radius:50%;font-size:19px;font-family:'Cinzel',Georgia,serif;font-weight:800;
+.chiplbl{color:var(--mut);font-size:11.5px;letter-spacing:2px;text-transform:uppercase}
+.chips{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.chip{width:56px;height:56px;border-radius:50%;font-size:22px;font-family:'Cinzel',Georgia,serif;font-weight:800;
  background:linear-gradient(180deg,#234f9e,#122c63);border:1.5px solid rgba(169,194,239,.45);color:var(--txt)}
 .chip:hover,.chip.sel{background:linear-gradient(180deg,#ffe9a8,#f5c542 48%,#e09b12);color:#231500;border-color:#ffedb6;
  box-shadow:0 8px 24px rgba(245,197,66,.5)}
