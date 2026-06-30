@@ -268,7 +268,7 @@ input:focus{outline:2px solid var(--gold)}
 .match:hover{border-color:var(--gold);box-shadow:0 10px 30px rgba(245,197,66,.22);transform:translateY(-3px)}
 .match.done{border-color:rgba(47,229,126,.5)}
 .match.done::before{background:linear-gradient(90deg,transparent,var(--ok1),transparent)}
-.match.locked{opacity:.45;cursor:not-allowed;border-style:dashed}
+.match.locked{opacity:.66;cursor:not-allowed;border-style:dashed}
 .match.locked::before{display:none}
 .mrow .tm{display:flex;align-items:center;gap:11px}
 .av{display:inline-flex;width:clamp(32px,2.1vw,40px);height:clamp(32px,2.1vw,40px);border-radius:50%;flex-shrink:0;
@@ -1114,7 +1114,7 @@ function renderBuzzQuestion(){
  $('undoBtn').classList.add('hidden');
  stopTimer();timerBase=SETTINGS.buzzSecs;tLeft=SETTINGS.buzzSecs;renderTimer();
  $('clock').classList.remove('primed');
- setKbd('Buzzer: <span>A</span> / <span>B</span> = team that buzzed · <span>S</span> skip');
+ setKbd('Buzzer: <span>1</span> / <span>2</span> = team that buzzed · <span>S</span> skip');
  fitText($('qText'),15);
  document.querySelectorAll('.ans .hi').forEach(el=>fitText(el,12,el.querySelector('span:last-child')));
  updatePanels();save();
@@ -1123,8 +1123,8 @@ function renderBuzzBtns(){
  const m=state.matches[play.mi],bc=$('buzzCtrl');
  bc.classList.remove('hidden');
  bc.innerHTML='<div class="buzzrow">'+
-  '<button class="buzzbtn teamA" onclick="buzzIn(0)">🔔 '+esc(state.teams[m.a])+'</button>'+
-  '<button class="buzzbtn teamB" onclick="buzzIn(1)">🔔 '+esc(state.teams[m.b])+'</button></div>';
+  '<button class="buzzbtn teamA" onclick="buzzIn(0)">🔔 <b>1</b> · '+esc(state.teams[m.a])+'</button>'+
+  '<button class="buzzbtn teamB" onclick="buzzIn(1)">🔔 <b>2</b> · '+esc(state.teams[m.b])+'</button></div>';
 }
 /* enable clicking the answer hexes for the team that's answering; an eliminated
    option (a previous team's wrong pick) stays locked out so only the remaining
@@ -1185,9 +1185,9 @@ function buzzFail(side,label){
   armBuzzOptions(false);
   const accent=other===0?'#f5c542':'#4dd7ff';
   $('turnBanner').innerHTML='❌ '+label+' (−1). <b style="color:'+accent+'">'+esc(teamOf(other))+'</b> can answer - press <b>GO</b>';
-  $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(other===0?'teamA':'teamB')+'" onclick="goSecond()">▶ GO '+esc(teamOf(other))+'</button></div>';
+  $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(other===0?'teamA':'teamB')+'" onclick="goSecond()">▶ GO '+esc(teamOf(other))+' <b>(Space)</b></button></div>';
   $('undoBtn').classList.remove('hidden'); /* host can undo the first team's −1 if mis-scored */
-  setKbd('Press <span>G</span> to start '+esc(teamOf(other))+'’s '+SETTINGS.buzzSecs+'s · <span>U</span> undo');
+  setKbd('Press <span>Space</span> to start '+esc(teamOf(other))+'’s '+SETTINGS.buzzSecs+'s · <span>U</span> undo');
   stopTimer();timerBase=SETTINGS.buzzSecs;tLeft=SETTINGS.buzzSecs;renderTimer();$('clock').classList.remove('primed');
  }else{
   revealBuzzAnswer();
@@ -1208,9 +1208,9 @@ function renderBuzzGo(second){
  const accent=second===0?'#f5c542':'#4dd7ff';
  $('turnBanner').innerHTML='↩ <b style="color:'+accent+'">'+esc(teamOf(second))+'</b> can answer - press <b>GO</b>';
  $('buzzCtrl').classList.remove('hidden');
- $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(second===0?'teamA':'teamB')+'" onclick="goSecond()">▶ GO '+esc(teamOf(second))+'</button></div>';
+ $('buzzCtrl').innerHTML='<div class="buzzrow"><button class="buzzbtn '+(second===0?'teamA':'teamB')+'" onclick="goSecond()">▶ GO '+esc(teamOf(second))+' <b>(Space)</b></button></div>';
  $('nextBtn').classList.add('hidden');$('skipBtn').classList.remove('hidden');$('undoBtn').classList.remove('hidden');
- setKbd('Press <span>G</span> to start '+esc(teamOf(second))+'’s '+SETTINGS.buzzSecs+'s · <span>U</span> undo');
+ setKbd('Press <span>Space</span> to start '+esc(teamOf(second))+'’s '+SETTINGS.buzzSecs+'s · <span>U</span> undo');
  stopTimer();timerBase=SETTINGS.buzzSecs;tLeft=SETTINGS.buzzSecs;renderTimer();$('clock').classList.remove('primed');
  updatePanels();save();
 }
@@ -1613,15 +1613,15 @@ document.addEventListener('keydown',e=>{
  if($('game').classList.contains('hidden')||!play)return;
  if(play.buzzer){
   if(play.phase==='buzzwait'){
-   if(e.key==='a'||e.key==='A'){e.preventDefault();buzzIn(0);return;}
-   if(e.key==='b'||e.key==='B'){e.preventDefault();buzzIn(1);return;}
+   if(e.key==='1'){e.preventDefault();buzzIn(0);return;}
+   if(e.key==='2'){e.preventDefault();buzzIn(1);return;}
    if(e.key==='s'||e.key==='S'){e.preventDefault();skipQ();return;}
   }else if(play.phase==='buzzanswer'){
    if(e.key>='1'&&e.key<='4'){e.preventDefault();pickBuzz(+e.key-1);return;}
    if(e.key==='0'||e.key==='x'||e.key==='X'){e.preventDefault();buzzNoAnswer();return;}
   }else if(play.phase==='buzzgo'){
    if(e.key>='1'&&e.key<='4'){e.preventDefault();pickBuzz(+e.key-1);return;} /* auto-starts 2nd team + scores */
-   if(e.key==='g'||e.key==='G'||e.key==='a'||e.key==='A'||e.key==='b'||e.key==='B'){e.preventDefault();goSecond();return;}
+   if(e.key===' '||e.key==='Enter'){e.preventDefault();goSecond();return;}
   }
  }
  if(play.phase==='openq'&&e.key>='0'&&e.key<='3')awardOpen(+e.key);
